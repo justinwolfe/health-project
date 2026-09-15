@@ -44,8 +44,15 @@ tested independently of React and of dnd-kit. The dnd-kit callbacks in
 `Board.tsx` do nothing but translate a drop into a column and an index and
 dispatch it.
 
-The create form offers the first page of characters (20). Paging or name search
-would be the natural extension — the API supports `filter: { name: ... }`.
+The character field is a hand-written ARIA 1.2 combobox: type to search, arrow
+keys to browse, images and species on every row. Search runs on the server
+(`filter: { name: ... }`, debounced), so all 826 characters are reachable
+without downloading them, and a `role="option"` "load more" row pages through
+the list when browsing without a query. DOM focus stays in the input throughout
+and the highlighted option is conveyed with `aria-activedescendant`.
+
+A card keeps the character it was created with, rather than looking it up in
+whatever the picker currently has loaded.
 
 ```
 src/
@@ -65,12 +72,13 @@ only. Drag and drop is verified in Playwright instead: jsdom has no layout
 engine, so it cannot produce the pointer events dnd-kit's sensors depend on —
 a passing jsdom "drag" test would not mean the feature works.
 
-The Playwright suite stubs the GraphQL endpoint with a fixed three-character
-fixture, so it makes no network requests and does not depend on a third-party
-API staying up. It covers creating cards, both validation rules, dragging
-between columns, reordering within one, moving a card with the keyboard alone,
-and the celebration — including that it stays silent under
-`prefers-reduced-motion`.
+The Playwright suite stubs the GraphQL endpoint with a 25-character fixture and
+emulates the real query semantics (name matching, 20 per page), so it makes no
+network requests and does not depend on a third-party API staying up. It covers
+creating cards, both validation rules, dragging between columns, reordering
+within one, moving a card with the keyboard alone, and the celebration —
+including that it stays silent under `prefers-reduced-motion` — plus the
+picker's search, paging, keyboard selection and ARIA wiring.
 
 After editing any GraphQL query or fragment, run `npm run codegen`.
 

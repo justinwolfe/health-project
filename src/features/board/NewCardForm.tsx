@@ -1,27 +1,24 @@
 import { useId, useState, type FormEvent } from 'react';
 
-import { getFragmentData } from '../../gql';
-import type { LoadedCharacter } from '../characters/useCharacters';
-import { CharacterOptionFragment } from './NewCardForm.graphql';
+import { CharacterPicker } from '../characters/CharacterPicker';
+import type { LoadedCharacter } from '../characters/types';
 import styles from './NewCardForm.module.css';
 
 type Props = {
-  characters: LoadedCharacter[];
-  loading: boolean;
-  onCreate: (input: { title: string; characterId: string }) => void;
+  onCreate: (input: { title: string; character: LoadedCharacter }) => void;
 };
 
-export function NewCardForm({ characters, loading, onCreate }: Props) {
+export function NewCardForm({ onCreate }: Props) {
   const [title, setTitle] = useState('');
-  const [characterId, setCharacterId] = useState('');
+  const [character, setCharacter] = useState<LoadedCharacter | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Bumped after a successful submit and used as the picker's key, which resets
+  // its search text along with the selection. Without it the field would still
+  // read "Rick Sanchez" while nothing is actually selected.
+  const [pickerGeneration, setPickerGeneration] = useState(0);
 
   const titleId = useId();
-  const characterFieldId = useId();
-
-  // Unmasking the whole list at once rather than per <option>: an <option> is
-  // not a component, so there is nowhere else to read the fragment.
-  const options = getFragmentData(CharacterOptionFragment, characters);
+  const characterId = useId();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,21 +29,22 @@ export function NewCardForm({ characters, loading, onCreate }: Props) {
       return;
     }
     // The brief requires every card to have a character.
-    if (!characterId) {
+    if (!character) {
       setError('Pick a character for this card.');
       return;
     }
 
-    onCreate({ title: trimmed, characterId });
+    onCreate({ title: trimmed, character });
     setTitle('');
-    setCharacterId('');
+    setCharacter(null);
     setError(null);
+    setPickerGeneration((generation) => generation + 1);
   }
 
   return (
     // noValidate suppresses the browser's own validation bubbles so both rules
     // are reported the same way, in the live region below. `required` stays on
-    // the fields because it is also what marks them required to screen readers.
+    // the title because it is also what marks it required to screen readers.
     <form className={styles.form} onSubmit={handleSubmit} aria-label="Add a card" noValidate>
       <div className={`${styles.field} ${styles.titleField}`}>
         <label className={styles.label} htmlFor={titleId}>
@@ -64,27 +62,18 @@ export function NewCardForm({ characters, loading, onCreate }: Props) {
       </div>
 
       <div className={`${styles.field} ${styles.characterField}`}>
-        <label className={styles.label} htmlFor={characterFieldId}>
+        <label className={styles.label} htmlFor={characterId}>
           Character
         </label>
-        <select
-          className={styles.select}
-          id={characterFieldId}
-          value={characterId}
-          onChange={(event) => setCharacterId(event.target.value)}
-          disabled={loading}
-          required
-        >
-          <option value="">{loading ? 'Loading characters…' : 'Choose a character'}</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id ?? ''}>
-              {option.name}
-            </option>
-          ))}
-        </select>
+        <CharacterPicker
+          key={pickerGeneration}
+          inputId={characterId}
+          value={character}
+          onChange={setCharacter}
+        />
       </div>
 
-      <button className={styles.submit} type="submit" disabled={loading}>
+      <button className={styles.submit} type="submit">
         Add card
       </button>
 

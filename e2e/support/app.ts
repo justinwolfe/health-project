@@ -1,6 +1,6 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
-import { charactersResponse } from './characters';
+import { queryCharacters } from './characters';
 
 /**
  * Matches the endpoint regardless of how the request is shaped. urql sends
@@ -9,6 +9,14 @@ import { charactersResponse } from './characters';
  */
 const API = /rickandmortyapi\.com\/graphql/;
 
+type CharacterVariables = { page?: number; filter?: { name?: string } };
+
+/** JSON.parse returns `any`; this keeps the unsafe value from spreading. */
+function parseJson<T>(raw: string | null | undefined): T | null {
+  if (!raw) return null;
+  return JSON.parse(raw) as T;
+}
+
 /**
  * Serves the characters query from a fixture. Without this the suite depends on
  * a third-party API being up and on its data never changing, which makes
@@ -16,10 +24,22 @@ const API = /rickandmortyapi\.com\/graphql/;
  */
 export async function stubCharactersApi(page: Page) {
   await page.route(API, async (route) => {
+    const request = route.request();
+
+    // urql sends a GET with `variables` as a query-string parameter; the POST
+    // branch is here so the stub does not quietly stop matching if that changes.
+    const encoded =
+      request.method() === 'POST'
+        ? (parseJson<{ variables?: CharacterVariables }>(request.postData())?.variables ?? {})
+        : (parseJson<CharacterVariables>(new URL(request.url()).searchParams.get('variables')) ??
+          {});
+
+    const variables: CharacterVariables = encoded;
+
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(charactersResponse),
+      body: JSON.stringify(queryCharacters(variables.filter?.name ?? '', variables.page ?? 1)),
     });
   });
 }
@@ -27,18 +47,32 @@ export async function stubCharactersApi(page: Page) {
 export async function openBoard(page: Page) {
   await stubCharactersApi(page);
   await page.goto('/');
-  // The select is disabled until the query resolves, so this is the signal that
-  // the app is ready to drive.
-  await page.getByLabel('Character').waitFor({ state: 'attached' });
-  await page.waitForFunction(() => {
-    const select = document.querySelector('select');
-    return select !== null && !select.disabled;
-  });
+  await page.getByRole('combobox', { name: 'Character' }).waitFor();
+}
+
+export function picker(page: Page): Locator {
+  return page.getByRole('combobox', { name: 'Character' });
+}
+
+export function pickerOptions(page: Page): Locator {
+  return page.getByRole('option');
+}
+
+/** Types into the combobox and waits for the results to catch up. */
+export async function searchCharacter(page: Page, text: string) {
+  await picker(page).fill(text);
+  // The search is debounced, so the first render still shows the old results.
+  await expect(page.getByRole('listbox')).toHaveAttribute('aria-busy', 'false');
+}
+
+export async function chooseCharacter(page: Page, name: string) {
+  await searchCharacter(page, name);
+  await pickerOptions(page).filter({ hasText: name }).first().click();
 }
 
 export async function addCard(page: Page, title: string, character: string) {
   await page.getByLabel('Title').fill(title);
-  await page.getByLabel('Character').selectOption({ label: character });
+  await chooseCharacter(page, character);
   await page.getByRole('button', { name: 'Add card' }).click();
 }
 

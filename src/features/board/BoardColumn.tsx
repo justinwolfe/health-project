@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-import type { LoadedCharacter } from '../characters/useCharacters';
+import type { LoadedCharacter } from '../characters/types';
 import styles from './BoardColumn.module.css';
 import { SortableCard } from './SortableCard';
 import { COLUMN_TITLES, type Card, type ColumnId } from './types';

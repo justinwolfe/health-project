@@ -14,7 +14,7 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useReducer, useRef, useState } from 'react';
 
-import { useCharacters } from '../characters/useCharacters';
+import type { LoadedCharacter } from '../characters/types';
 import styles from './Board.module.css';
 import { BoardColumn } from './BoardColumn';
 import { boardReducer } from './boardReducer';
@@ -27,7 +27,12 @@ import { COLUMN_IDS, COLUMN_TITLES, emptyBoard } from './types';
 
 export function Board() {
   const [board, dispatch] = useReducer(boardReducer, emptyBoard);
-  const { characters, byId, fetching, error } = useCharacters();
+
+  // Characters referenced by cards on the board. The picker searches the API,
+  // so what it has loaded changes as the user types — a card has to keep the
+  // character it was created with rather than look it up in the current
+  // results, where it may no longer be.
+  const [charactersById, setCharactersById] = useState<Map<string, LoadedCharacter>>(new Map());
 
   // Drives the DragOverlay. The card is still in the board while dragging; this
   // only records which one to render following the pointer.
@@ -118,21 +123,14 @@ export function Board() {
   return (
     <div className={styles.board}>
       <NewCardForm
-        characters={characters}
-        loading={fetching}
-        onCreate={({ title, characterId }) => {
+        onCreate={({ title, character }) => {
+          setCharactersById((previous) => new Map(previous).set(character.id, character));
           dispatch({
             type: 'card/added',
-            card: { id: crypto.randomUUID(), title, characterId },
+            card: { id: crypto.randomUUID(), title, characterId: character.id },
           });
         }}
       />
-
-      {error ? (
-        <p className={styles.error} role="alert">
-          Could not load characters: {error.message}
-        </p>
-      ) : null}
 
       <DndContext
         sensors={sensors}
@@ -173,14 +171,18 @@ export function Board() {
               columnId={columnId}
               cardIds={board.columnOrder[columnId]}
               cards={board.cards}
-              charactersById={byId}
+              charactersById={charactersById}
             />
           ))}
         </div>
 
         <DragOverlay>
           {activeCard ? (
-            <CardView card={activeCard} character={byId.get(activeCard.characterId)} lifted />
+            <CardView
+              card={activeCard}
+              character={charactersById.get(activeCard.characterId)}
+              lifted
+            />
           ) : null}
         </DragOverlay>
       </DndContext>

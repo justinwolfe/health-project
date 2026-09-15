@@ -1,5 +1,5 @@
 import { CharacterChip } from '../characters/CharacterChip';
-import type { LoadedCharacter } from '../characters/useCharacters';
+import type { LoadedCharacter } from '../characters/types';
 import styles from './CardView.module.css';
 import type { Card } from './types';
 

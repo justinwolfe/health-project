@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import type { LoadedCharacter } from '../characters/useCharacters';
+import type { LoadedCharacter } from '../characters/types';
 import { CardView } from './CardView';
 import styles from './SortableCard.module.css';
 import type { Card } from './types';

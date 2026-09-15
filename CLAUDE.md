@@ -103,18 +103,25 @@ src/
       types.ts                 # ColumnId, Card, BoardState
       *.test.ts                # pure logic only
     characters/
-      useCharacters.ts         # loads + indexes the character list
+      CharacterPicker.tsx      # ARIA 1.2 combobox: search, images, paging
+      CharacterPicker.graphql.ts
+      CharacterPicker.module.css
+      useCharacterSearch.ts    # debounced server-side search + paging
+      types.ts                 # LoadedCharacter
       CharacterChip.tsx
       CharacterChip.graphql.ts # its fragment (see note below)
       CharacterChip.module.css
+  hooks/
+    useDebouncedValue.ts
   styles/
     tokens.css                 # all design values live here
     global.css
 e2e/
-  board.spec.ts                # the whole suite
+  board.spec.ts                # cards, dragging, celebration
+  character-picker.spec.ts     # combobox behaviour and ARIA wiring
   support/
     app.ts                     # API stub, drag helpers, locators
-    characters.ts              # fixture response
+    characters.ts              # 25-character fixture + query emulation
 ```
 
 ## Conventions
@@ -146,6 +153,38 @@ operation with a different target column. It is pure, returns new state, and
 returns the _same object_ when nothing changed so React can skip a render. Keep
 new board logic pure and tested there rather than inside dnd event handlers.
 
+**The character picker.** `CharacterPicker` is a hand-written ARIA 1.2
+combobox — deliberately no dependency. Rules that are load-bearing, not
+stylistic:
+
+- DOM focus never leaves the `<input role="combobox">`. The highlighted option
+  is pointed at with `aria-activedescendant`; the user must be able to keep
+  typing while stepping through results.
+- `aria-activedescendant` is **cleared whenever the text changes**. NVDA stops
+  announcing typed and deleted characters while a virtual focus is set.
+- `aria-selected` goes on the **highlighted** option, not only a chosen one.
+  Chrome + VoiceOver only announce the active option when it is selected.
+- The "load more" row is a real `role="option"`. A non-option element inside the
+  popup makes screen readers switch interaction mode partway down the list.
+- Options use `onMouseDown={preventDefault}`, or the input blurs and the list
+  closes before the click lands.
+
+Search runs on the server via `filter: { name: ... }`, debounced 250ms, so all
+826 characters are reachable without loading them up front. `useCharacterSearch`
+accumulates pages and keys applied results on the **response's** variables
+(`operation.variables`), not the requested ones — urql keeps the previous
+response visible while the next is in flight, so trusting the requested page
+appends page 1's rows a second time.
+
+The form resets the picker by changing its `key` after a successful submit.
+Clearing only the selection would leave the field reading "Rick Sanchez" with
+nothing actually selected.
+
+**Cards own their character.** A card keeps the `LoadedCharacter` it was created
+with (in a map on `Board`), rather than looking it up in the current search
+results, where it will usually no longer be. The board's own types stay free of
+GraphQL types, which is what keeps the reducer tests trivial.
+
 **Styling.** Use tokens from `styles/tokens.css`; do not write raw colors or
 pixel spacing in a component's CSS module. Respect
 `prefers-reduced-motion` — global.css already neutralizes animation, and the
@@ -167,8 +206,11 @@ than relying on visual position alone.
 
 **The e2e suite never touches the network.** `openBoard()` in
 `e2e/support/app.ts` intercepts the API with `page.route()` and serves a
-three-character fixture, so assertions like "the third option is Birdperson"
-stay true and the suite does not fail when a third party is down.
+25-character fixture, so assertions stay true and the suite does not fail when a
+third party is down. The stub reads the request's `variables` and emulates the
+real thing — substring name match, 20 per page, null counts on no match — which
+is what lets the picker's search and paging be tested at all. Two named
+characters sit deliberately beyond page 1.
 
 Two traps that cost real time here, both encoded in that file:
 

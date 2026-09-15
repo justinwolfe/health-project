@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test';
 
-import { addCard, cardTitles, column, dragTo, dragWithKeyboard, openBoard } from './support/app';
+import {
+  addCard,
+  cardTitles,
+  chooseCharacter,
+  column,
+  dragTo,
+  dragWithKeyboard,
+  openBoard,
+  picker,
+} from './support/app';
 
 test.beforeEach(async ({ page }) => {
   await openBoard(page);
@@ -16,16 +25,6 @@ test('renders the three columns and the create form', async ({ page }) => {
   await expect(page.getByRole('form', { name: 'Add a card' })).toBeVisible();
 });
 
-test('offers the characters returned by the API', async ({ page }) => {
-  const options = page.getByLabel('Character').locator('option');
-  await expect(options).toHaveText([
-    'Choose a character',
-    'Rick Sanchez',
-    'Morty Smith',
-    'Birdperson',
-  ]);
-});
-
 test('creates a card with its assigned character and clears the form', async ({ page }) => {
   await addCard(page, 'Fix the portal gun', 'Rick Sanchez');
 
@@ -35,7 +34,7 @@ test('creates a card with its assigned character and clears the form', async ({ 
   await expect(card).toContainText('Rick Sanchez');
 
   await expect(page.getByLabel('Title')).toHaveValue('');
-  await expect(page.getByLabel('Character')).toHaveValue('');
+  await expect(picker(page)).toHaveValue('');
 });
 
 test('refuses a card with no character assigned', async ({ page }) => {
@@ -47,7 +46,7 @@ test('refuses a card with no character assigned', async ({ page }) => {
 });
 
 test('refuses a card with a blank title', async ({ page }) => {
-  await page.getByLabel('Character').selectOption({ label: 'Morty Smith' });
+  await chooseCharacter(page, 'Morty Smith');
   await page.getByLabel('Title').fill('   ');
   await page.getByRole('button', { name: 'Add card' }).click();
 
