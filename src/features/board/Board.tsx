@@ -25,7 +25,14 @@ import { NewCardForm } from './NewCardForm';
 import { COLUMN_IDS, COLUMN_TITLES, emptyBoard, type ColumnId } from './types';
 
 /** How long the Done portal stays up: the burst, plus a beat to read it. */
-const COMPLETION_MS = 900;
+const DISCHARGE_MS = 1000;
+
+/**
+ * How long the finished card keeps its celebration. Longer than the portal's,
+ * because the Meeseeks pops up after the discharge and has to poof before this
+ * expires — see the timings in MeeseeksPoof.module.css.
+ */
+const COMPLETION_MS = 1900;
 
 export function Board() {
   const [arrivingIds, setArrivingIds] = useState<Set<string>>(new Set());
@@ -51,17 +58,34 @@ export function Board() {
   // Cleared once the effect has played, which is also what takes the Done
   // portal back off screen.
   const [completion, setCompletion] = useState<{ cardId: string; key: number } | null>(null);
+
+  // The portal's discharge is tracked separately because it finishes first: the
+  // portal closes while the card is still celebrating.
+  const [discharge, setDischarge] = useState<number | null>(null);
+
   const completionCount = useRef(0);
   const completionTimer = useRef<number | undefined>(undefined);
+  const dischargeTimer = useRef<number | undefined>(undefined);
 
-  useEffect(() => () => window.clearTimeout(completionTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(completionTimer.current);
+      window.clearTimeout(dischargeTimer.current);
+    },
+    [],
+  );
 
   function playCompletion(cardId: string) {
     completionCount.current += 1;
-    setCompletion({ cardId, key: completionCount.current });
+    const key = completionCount.current;
+
+    setCompletion({ cardId, key });
+    setDischarge(key);
 
     window.clearTimeout(completionTimer.current);
+    window.clearTimeout(dischargeTimer.current);
     completionTimer.current = window.setTimeout(() => setCompletion(null), COMPLETION_MS);
+    dischargeTimer.current = window.setTimeout(() => setDischarge(null), DISCHARGE_MS);
   }
 
   // The column a drag would currently land in. Derived from our own drop-target
@@ -174,9 +198,13 @@ export function Board() {
     return column ? COLUMN_TITLES[column] : 'an unknown column';
   }
 
-  // A card being brought into Done from another column. Reordering inside Done
-  // is an ordinary sort: no portal, and the dragged card stays visible.
-  const enteringDone = targetColumn === 'done' && dragOrigin !== null && dragOrigin !== 'done';
+  // The Done portal opens for the whole drag, not just while Done is targeted:
+  // by the time the cursor is over the column the card under it covers the
+  // portal, so opening then would be showing it where it cannot be seen.
+  //
+  // A card already in Done is excluded — moving one of those around is an
+  // ordinary sort, not something to finish.
+  const portalOpen = activeCardId !== null && dragOrigin !== null && dragOrigin !== 'done';
 
   const activeCard = activeCardId ? board.cards[activeCardId] : undefined;
 
@@ -239,7 +267,8 @@ export function Board() {
               arrivingIds={arrivingIds}
               onArrivalComplete={finishArrival}
               targeted={targetColumn === columnId}
-              portalOpen={enteringDone}
+              portalOpen={portalOpen}
+              dischargeKey={discharge}
               completedCardId={completion?.cardId ?? null}
               completionKey={completion?.key ?? null}
             />

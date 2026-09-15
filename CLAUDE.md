@@ -92,6 +92,7 @@ src/
   features/
     board/
       PortalVortex.tsx         # the portal art, shared by both effects
+      MeeseeksPoof.tsx         # pops up on a finished card, then vanishes
       CardArrival.tsx          # a new card materialises in To Do
       DonePortal.tsx           # Done's drop target, charges and discharges
       Board.tsx                # owns board state + all dnd-kit wiring
@@ -207,15 +208,24 @@ opens in the centre of Done while a card is dragged over it, discharging when
 one lands (`DonePortal`). There is no confetti and no `canvas-confetti`
 dependency — the portal is the board's one visual vocabulary.
 
-Done's portal is transient by design: mounted only while the column is targeted
-or discharging, then unmounted. `Board` clears `completion` on a timer
-(`COMPLETION_MS`), and that clearing is what takes the portal off screen.
+Done's portal is transient: mounted only while a qualifying drag is in progress
+or the discharge is playing, then unmounted.
 
-Two rules keep the drop zone clear for it:
+`Board` runs **two** timers, because the effects do not finish together.
+`DISCHARGE_MS` closes the portal; `COMPLETION_MS` is longer and holds the card's
+own celebration — the pass-through and then `MeeseeksPoof`, which pops up after
+the discharge and has to finish poofing before the card leaves its completed
+state. Lengthen the Meeseeks animation and `COMPLETION_MS` has to grow with it.
 
-- **The portal opens only for a card arriving from another column.** Reordering
-  inside Done is an ordinary sort. `Board` tracks `dragOrigin` in state — not a
-  ref — precisely because the render needs it to decide this.
+When it opens, and what keeps its drop zone clear:
+
+- **It opens for the whole drag, not on hover.** By the time the cursor reaches
+  Done the dragged card covers the portal, so opening then would show it where
+  it cannot be seen. It opens as soon as a card starts moving and charges —
+  brighter, larger, spun up — once the drop would actually land in Done.
+- **Not for a card already in Done.** Reordering there is an ordinary sort.
+  `Board` tracks `dragOrigin` in state, not a ref, precisely because the render
+  needs it to decide this.
 - **`handleDragOver` does not move the card into Done mid-drag**, unlike every
   other column. That move leaves a faded placeholder sitting exactly where the
   portal opens. The card still follows the cursor in the `DragOverlay`; only
@@ -238,8 +248,8 @@ Things that are easy to get wrong here:
   card twice replays properly.
 - Swirl speeds are CSS custom properties on `PortalVortex`, so the charging
   state can spin it up without redefining the animation.
-- Sparks use the `transform` shorthand, not the individual `translate`/`rotate`
-  properties. Those always apply in the order translate, rotate, scale, so a
+- Both the portal's sparks and the Meeseeks' puff use the `transform`
+  shorthand, not the individual `translate`/`rotate` properties. Those always apply in the order translate, rotate, scale, so a
   spark moved sideways and then span on the spot instead of orbiting outwards.
 
 **Column targeting does not use dnd-kit's `isOver`.** `Board` derives

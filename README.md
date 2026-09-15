@@ -4,12 +4,15 @@ A frontend-only Kanban board — **To Do / Doing / Done** — where every card i
 assigned a Rick and Morty character. Cards drag between columns and reorder
 within a column.
 
-Both flourishes use one piece of art, a procedurally drawn portal: a new card
-materialises into To Do through one, and a portal opens in the middle of Done as
-you drag a card in from another column, discharging with a shockwave and sparks
-as the card lands, then closing again. Reordering within Done is left alone. No
-confetti, no animation dependency; everything is SVG and CSS, and both effects
-are skipped entirely under `prefers-reduced-motion`.
+A new card materialises into To Do through a procedurally drawn portal. Start
+dragging any unfinished card and a portal opens in the middle of Done, charging
+as the drop comes within reach and discharging with a shockwave and sparks as
+the card lands — then a Mr. Meeseeks pops up on the finished card, beams, and
+poofs out of existence, which in the show is the entire reason a Meeseeks
+exists. Reordering within Done is left alone.
+
+No confetti and no animation dependency: everything is hand-drawn SVG and CSS
+keyframes, and every effect is skipped entirely under `prefers-reduced-motion`.
 
 ## Running it
 

@@ -21,6 +21,10 @@
  */
 .completed {
   animation: throughPortal 640ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  /* Anchors the Meeseeks, which pops out above the card, and lifts the whole
+     card above its neighbours for the duration. */
+  position: relative;
+  z-index: 4;
 }
 
 @keyframes throughPortal {

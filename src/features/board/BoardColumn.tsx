@@ -16,6 +16,8 @@ type Props = {
   targeted: boolean;
   /** Only meaningful for Done: a card is arriving from another column. */
   portalOpen: boolean;
+  /** Only meaningful for Done: changes each time the portal should discharge. */
+  dischargeKey: number | null;
   arrivingIds: Set<string>;
   onArrivalComplete: (id: string) => void;
   /** Set on the card that just landed here, to play its pass-through. */
@@ -31,6 +33,7 @@ export function BoardColumn({
   charactersById,
   targeted,
   portalOpen,
+  dischargeKey,
   arrivingIds,
   onArrivalComplete,
   completedCardId,
@@ -83,9 +86,9 @@ export function BoardColumn({
               is over it, and keeps it just long enough to discharge. Absolutely
               positioned and pointer-events: none, so it overlays the cards
               without affecting layout or the drop itself. */}
-          {columnId === 'done' && (portalOpen || completionKey !== null) ? (
+          {columnId === 'done' && (portalOpen || dischargeKey !== null) ? (
             <li className={styles.portalSlot} aria-hidden="true">
-              <DonePortal blastKey={completionKey} />
+              <DonePortal charging={targeted || dischargeKey !== null} blastKey={dischargeKey} />
             </li>
           ) : null}
         </ul>

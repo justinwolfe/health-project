@@ -116,6 +116,23 @@ test('discharges the Done portal when a card reaches it', async ({ page }) => {
   await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
 });
 
+test('summons a Meeseeks on the finished card, which then poofs', async ({ page }) => {
+  await addCard(page, 'Existence is pain', 'Rick Sanchez');
+
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+
+  // It belongs to the card, so it travels with it rather than sitting in the
+  // column, and it outlives the portal's discharge.
+  const meeseeks = column(page, 'done').getByTestId('card').getByTestId('meeseeks');
+  await expect(meeseeks).toBeAttached();
+  await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
+  await expect(meeseeks).toBeAttached();
+
+  // A Meeseeks exists only until its task is done.
+  await expect(meeseeks).toHaveCount(0);
+  await expect(column(page, 'done').getByTestId('card')).toContainText('Existence is pain');
+});
+
 test.describe('with reduced motion requested', () => {
   test.use({ reducedMotion: 'reduce' });
 
@@ -127,6 +144,7 @@ test.describe('with reduced motion requested', () => {
     await expect(column(page, 'done').getByTestId('card')).toContainText('Quietly done');
     await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(0);
     await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
+    await expect(page.getByTestId('meeseeks')).toHaveCount(0);
   });
 });
 
@@ -152,17 +170,25 @@ test('skips the portal when reduced motion is requested', async ({ page }) => {
   );
 });
 
-test('opens the Done portal only while a card is over it', async ({ page }) => {
+test('opens the Done portal as soon as a card starts moving, not on hover', async ({ page }) => {
   await addCard(page, 'Charge it up', 'Rick Sanchez');
 
   const portal = column(page, 'done').getByTestId('done-portal');
   await expect(portal).toHaveCount(0);
 
-  // Hold the drag over Done rather than completing it, to catch the mid-drag state.
-  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'), {
+  // Dragging only as far as Doing: the portal should already be open, so it is
+  // visible before the cursor reaches Done and covers it.
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'doing'), {
     hold: true,
   });
   await expect(portal).toBeVisible();
+  await expect(portal.locator('[data-charging="true"]')).toHaveCount(0);
+
+  // Over Done it charges.
+  const done = await column(page, 'done').boundingBox();
+  if (!done) throw new Error('Done column is not visible');
+  await page.mouse.move(done.x + done.width / 2, done.y + done.height / 2, { steps: 8 });
+  await expect(portal.locator('[data-charging="true"]')).toHaveCount(1);
 
   await page.mouse.up();
   await expect(column(page, 'done').getByTestId('portal-blast')).toBeAttached();
@@ -197,13 +223,15 @@ test('does not open the portal when reordering inside Done', async ({ page }) =>
   await expect(column(page, 'done').getByTestId('card')).toHaveCount(2);
   await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
 
-  // Reordering within Done is an ordinary sort, not an arrival.
+  // Reordering within Done is an ordinary sort, not an arrival — no portal even
+  // though a drag is in progress.
   const cards = column(page, 'done').getByTestId('card');
   await dragTo(page, cards.first(), cards.last(), { hold: true });
   await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
 
   await page.mouse.up();
   await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(0);
+  await expect(page.getByTestId('meeseeks')).toHaveCount(0);
 });
 
 test('gives Done no placeholder text', async ({ page }) => {
@@ -213,7 +241,7 @@ test('gives Done no placeholder text', async ({ page }) => {
   await expect(column(page, 'doing')).toContainText('Drop a card here');
 });
 
-test('closes the Done portal again when the drag moves away without dropping', async ({ page }) => {
+test('closes the Done portal when a drag ends somewhere else', async ({ page }) => {
   await addCard(page, 'Not yet done', 'Rick Sanchez');
 
   const portal = column(page, 'done').getByTestId('done-portal');
@@ -222,14 +250,19 @@ test('closes the Done portal again when the drag moves away without dropping', a
   });
   await expect(portal).toBeVisible();
 
-  // Drag back out to Doing; the portal should not linger.
+  // Back out to Doing. The portal stays open — a drag is still in progress —
+  // but stops charging, since the drop would no longer land in Done.
   const doing = await column(page, 'doing').boundingBox();
   if (!doing) throw new Error('Doing column is not visible');
   await page.mouse.move(doing.x + doing.width / 2, doing.y + doing.height / 2, { steps: 8 });
-  await expect(portal).toHaveCount(0);
+  await expect(portal).toBeVisible();
+  await expect(portal.locator('[data-charging="true"]')).toHaveCount(0);
 
+  // Dropping in Doing ends the drag, and the portal closes with no discharge.
   await page.mouse.up();
   await expect(column(page, 'doing').getByTestId('card')).toHaveCount(1);
+  await expect(portal).toHaveCount(0);
+  await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(0);
 });
 
 test('replays the discharge when a second card is finished', async ({ page }) => {

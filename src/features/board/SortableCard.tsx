@@ -6,6 +6,7 @@ import { useCallback } from 'react';
 import { CardArrival } from './CardArrival';
 import type { LoadedCharacter } from '../characters/types';
 import { CardView } from './CardView';
+import { MeeseeksPoof } from './MeeseeksPoof';
 import styles from './SortableCard.module.css';
 import type { Card } from './types';
 
@@ -65,6 +66,7 @@ export function SortableCard({
           className={completionKey === null ? undefined : styles.completed}
         >
           <CardView card={card} character={character} />
+          {completionKey === null ? null : <MeeseeksPoof />}
         </div>
       )}
     </li>
