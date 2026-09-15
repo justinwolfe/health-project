@@ -14,12 +14,14 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  fragment CharacterOption on Character {\n    id\n    name\n  }\n": typeof types.CharacterOptionFragmentDoc,
     "\n  fragment CharacterChip on Character {\n    id\n    name\n    image\n    species\n  }\n": typeof types.CharacterChipFragmentDoc,
-    "\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n      }\n    }\n  }\n": typeof types.CharactersDocument,
+    "\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n        ...CharacterOption\n      }\n    }\n  }\n": typeof types.CharactersDocument,
 };
 const documents: Documents = {
+    "\n  fragment CharacterOption on Character {\n    id\n    name\n  }\n": types.CharacterOptionFragmentDoc,
     "\n  fragment CharacterChip on Character {\n    id\n    name\n    image\n    species\n  }\n": types.CharacterChipFragmentDoc,
-    "\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n      }\n    }\n  }\n": types.CharactersDocument,
+    "\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n        ...CharacterOption\n      }\n    }\n  }\n": types.CharactersDocument,
 };
 
 /**
@@ -39,11 +41,15 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  fragment CharacterOption on Character {\n    id\n    name\n  }\n"): (typeof documents)["\n  fragment CharacterOption on Character {\n    id\n    name\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  fragment CharacterChip on Character {\n    id\n    name\n    image\n    species\n  }\n"): (typeof documents)["\n  fragment CharacterChip on Character {\n    id\n    name\n    image\n    species\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n      }\n    }\n  }\n"): (typeof documents)["\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n        ...CharacterOption\n      }\n    }\n  }\n"): (typeof documents)["\n  query Characters($page: Int) {\n    characters(page: $page) {\n      info {\n        count\n        pages\n        next\n      }\n      results {\n        id\n        ...CharacterChip\n        ...CharacterOption\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

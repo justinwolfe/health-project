@@ -2,6 +2,11 @@ export const COLUMN_IDS = ['todo', 'doing', 'done'] as const;
 
 export type ColumnId = (typeof COLUMN_IDS)[number];
 
+/** dnd-kit hands back opaque ids; this tells a column apart from a card. */
+export function isColumnId(id: string): id is ColumnId {
+  return (COLUMN_IDS as readonly string[]).includes(id);
+}
+
 export const COLUMN_TITLES: Record<ColumnId, string> = {
   todo: 'To Do',
   doing: 'Doing',

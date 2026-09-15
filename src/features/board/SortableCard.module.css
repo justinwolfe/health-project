@@ -1,0 +1,15 @@
+.item {
+  list-style: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.item:active {
+  cursor: grabbing;
+}
+
+/* While dragging, the original position keeps the card's footprint but fades,
+   because the visible card is rendered in the DragOverlay instead. */
+.placeholder {
+  opacity: 0.35;
+}

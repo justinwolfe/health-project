@@ -40,7 +40,12 @@ First e2e run only: `npx playwright install chromium`.
 State is normalized: cards live in one map keyed by id, and each column holds an
 ordered array of ids. Every drag — reordering inside a column and moving across
 columns alike — resolves to a single pure function, `moveCard()`, which is unit
-tested independently of React and of dnd-kit.
+tested independently of React and of dnd-kit. The dnd-kit callbacks in
+`Board.tsx` do nothing but translate a drop into a column and an index and
+dispatch it.
+
+The create form offers the first page of characters (20). Paging or name search
+would be the natural extension — the API supports `filter: { name: ... }`.
 
 ```
 src/
@@ -53,12 +58,19 @@ src/
 e2e/             Playwright specs
 ```
 
-## Two testing notes
+## Testing
 
-Unit tests run in a **node** environment with no jsdom, and cover pure logic
+Unit tests run in a **node** environment with no jsdom and cover pure logic
 only. Drag and drop is verified in Playwright instead: jsdom has no layout
 engine, so it cannot produce the pointer events dnd-kit's sensors depend on —
 a passing jsdom "drag" test would not mean the feature works.
+
+The Playwright suite stubs the GraphQL endpoint with a fixed three-character
+fixture, so it makes no network requests and does not depend on a third-party
+API staying up. It covers creating cards, both validation rules, dragging
+between columns, reordering within one, moving a card with the keyboard alone,
+and the celebration — including that it stays silent under
+`prefers-reduced-motion`.
 
 After editing any GraphQL query or fragment, run `npm run codegen`.
 

@@ -91,17 +91,30 @@ src/
     characters.ts              # the Characters query
   features/
     board/
-      types.ts                 # ColumnId, Card, BoardState
+      Board.tsx                # owns board state + all dnd-kit wiring
+      BoardColumn.tsx          # one column: droppable + SortableContext
+      SortableCard.tsx         # dnd wiring for a single card
+      CardView.tsx             # card presentation, shared with DragOverlay
+      NewCardForm.tsx          # create form (+ .graphql.ts fragment)
+      boardReducer.ts          # add + move actions
       moveCard.ts              # the one pure state transition behind all drags
-      moveCard.test.ts
+      dropTarget.ts            # turns a dnd-kit `over` id into column + index
+      celebrate.ts             # confetti on reaching Done
+      types.ts                 # ColumnId, Card, BoardState
+      *.test.ts                # pure logic only
     characters/
+      useCharacters.ts         # loads + indexes the character list
       CharacterChip.tsx
       CharacterChip.graphql.ts # its fragment (see note below)
       CharacterChip.module.css
   styles/
     tokens.css                 # all design values live here
     global.css
-e2e/                           # Playwright specs
+e2e/
+  board.spec.ts                # the whole suite
+  support/
+    app.ts                     # API stub, drag helpers, locators
+    characters.ts              # fixture response
 ```
 
 ## Conventions
@@ -117,6 +130,15 @@ component export nothing else, or Fast Refresh silently stops working.
 
 After editing any query or fragment, run `npm run codegen`. `src/gql/` is
 committed so a fresh clone builds without network access.
+
+**Drag handling.** `Board.tsx` owns the state and the dnd-kit callbacks, and
+those callbacks stay thin: they translate dnd-kit's `active`/`over` ids into a
+column and an index via `dropTarget.ts`, then dispatch. Cross-column moves are
+applied in `onDragOver` so the card visibly enters the new column mid-drag;
+same-column reordering is already previewed by `SortableContext`, so it is
+settled in `onDragEnd`. Because `onDragOver` may have already moved a card into
+Done, the column the drag _started_ in is kept in a ref so the celebration fires
+once, on arrival.
 
 **State.** `moveCard()` in `features/board/moveCard.ts` is the single transition
 for both reordering within a column and moving across columns — they are the same
@@ -143,5 +165,19 @@ than relying on visual position alone.
   (`mouse.down` → several `mouse.move` calls → `mouse.up`); a single move is
   often ignored by the sensor's activation constraint.
 
-The e2e smoke test hits the **real** Rick and Morty API. If a test needs
-determinism, stub with `page.route()` rather than adding a mocking layer.
+**The e2e suite never touches the network.** `openBoard()` in
+`e2e/support/app.ts` intercepts the API with `page.route()` and serves a
+three-character fixture, so assertions like "the third option is Birdperson"
+stay true and the suite does not fail when a third party is down.
+
+Two traps that cost real time here, both encoded in that file:
+
+- urql sends queries as a **GET with the document in the query string**, so
+  `page.route('https://rickandmortyapi.com/graphql', ...)` — an exact URL —
+  silently never matches and the tests quietly hit the real API. Match the
+  endpoint with a regex.
+- The fixture carries `__typename` on every object, because urql adds
+  `__typename` to outgoing documents and its cache reads it back.
+
+Keyboard drags need a frame between keypresses; `dragWithKeyboard()` waits on
+dnd-kit's `aria-pressed` and then on animation frames rather than sleeping.
