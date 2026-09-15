@@ -202,16 +202,26 @@ results, where it will usually no longer be. The board's own types stay free of
 GraphQL types, which is what keeps the reducer tests trivial.
 
 **The portal effects.** One piece of art, `PortalVortex`, in two situations: a
-card materialises into To Do through a portal (`CardArrival`), and Done's drop
-target _is_ a portal (`DonePortal`) that idles dim, brightens and spins up while
-a card is over it, then discharges when one lands. There is no confetti and no
-`canvas-confetti` dependency — the portal is the board's one visual vocabulary.
+card materialises into To Do through a portal (`CardArrival`), and a portal
+opens in the centre of Done while a card is dragged over it, discharging when
+one lands (`DonePortal`). There is no confetti and no `canvas-confetti`
+dependency — the portal is the board's one visual vocabulary.
+
+Done's portal is transient by design: mounted only while the column is targeted
+or discharging, then unmounted. `Board` clears `completion` on a timer
+(`COMPLETION_MS`), and that clearing is what takes the portal off screen.
+
+Done also suppresses **both** previews of the dragged card, so the portal is the
+only thing in the drop target: `handleDragOver` does not move the card into Done
+mid-drag (every other column still does), and the `DragOverlay` renders nothing
+while Done is targeted. The drag ghost is the one that actually mattered —
+dnd-kit renders it in a fixed layer above the page, so it sat squarely on top of
+the portal, and no amount of z-index inside the column would have moved it.
 
 Things that are easy to get wrong here:
 
 - Both effects are **not created at all** under `prefers-reduced-motion`, rather
-  than created and hidden. The portal itself stays visible in Done because it is
-  the drop target, not decoration.
+  than created and hidden.
 - Replaying a CSS animation needs a **new element**, not a re-added class. Both
   effects key on a counter that changes per occurrence, so finishing the same
   card twice replays properly.
