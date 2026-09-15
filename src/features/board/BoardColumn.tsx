@@ -11,9 +11,18 @@ type Props = {
   cardIds: string[];
   cards: Record<string, Card>;
   charactersById: Map<string, LoadedCharacter>;
+  arrivingIds: Set<string>;
+  onArrivalComplete: (id: string) => void;
 };
 
-export function BoardColumn({ columnId, cardIds, cards, charactersById }: Props) {
+export function BoardColumn({
+  columnId,
+  cardIds,
+  cards,
+  charactersById,
+  arrivingIds,
+  onArrivalComplete,
+}: Props) {
   // Registers the column itself as a drop target, which is what makes an empty
   // column droppable — with no cards there is nothing else to drop onto.
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
@@ -42,6 +51,8 @@ export function BoardColumn({ columnId, cardIds, cards, charactersById }: Props)
               <SortableCard
                 key={cardId}
                 card={card}
+                arriving={arrivingIds.has(cardId)}
+                onArrivalComplete={onArrivalComplete}
                 character={charactersById.get(card.characterId)}
               />
             );

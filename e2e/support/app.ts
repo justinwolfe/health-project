@@ -93,6 +93,7 @@ export function cardTitles(page: Page, columnId: 'todo' | 'doing' | 'done') {
  * Hence the stepped movement, and the settle move at the end before releasing.
  */
 export async function dragTo(page: Page, source: Locator, target: Locator) {
+  await expect(source).not.toHaveAttribute('aria-disabled', 'true');
   const from = await source.boundingBox();
   const to = await target.boundingBox();
   if (!from || !to) throw new Error('Cannot drag: source or target is not visible');
@@ -134,6 +135,7 @@ async function nextFrame(page: Page) {
  * arrive before it has anything to move against and are dropped on the floor.
  */
 export async function dragWithKeyboard(page: Page, card: Locator, keys: string[]) {
+  await expect(card).not.toHaveAttribute('aria-disabled', 'true');
   await card.focus();
   await page.keyboard.press('Space');
 

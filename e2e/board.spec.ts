@@ -109,3 +109,25 @@ test.describe('with reduced motion requested', () => {
     await expect(page.locator('canvas')).toHaveCount(0);
   });
 });
+
+test('opens a portal in To Do, reveals the card, and clears the effect', async ({ page }) => {
+  await addCard(page, 'Through the portal', 'Rick Sanchez');
+  const portal = column(page, 'todo').getByTestId('creation-portal');
+  await expect(portal).toBeVisible();
+  const card = column(page, 'todo').getByTestId('card');
+  await expect(card).toHaveAttribute('aria-disabled', 'true');
+  await expect(portal).toHaveCount(0);
+  await expect(card).not.toHaveAttribute('aria-disabled', 'true');
+  await expect(card).toContainText('Through the portal');
+});
+
+test('skips the portal when reduced motion is requested', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await addCard(page, 'A quiet arrival', 'Morty Smith');
+  await expect(page.getByTestId('creation-portal')).toHaveCount(0);
+  await expect(column(page, 'todo').getByTestId('card')).toBeVisible();
+  await expect(column(page, 'todo').getByTestId('card')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+});

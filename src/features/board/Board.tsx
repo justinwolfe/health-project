@@ -12,7 +12,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useReducer, useRef, useState } from 'react';
+import { useCallback, useReducer, useRef, useState } from 'react';
 
 import type { LoadedCharacter } from '../characters/types';
 import styles from './Board.module.css';
@@ -26,6 +26,14 @@ import { NewCardForm } from './NewCardForm';
 import { COLUMN_IDS, COLUMN_TITLES, emptyBoard } from './types';
 
 export function Board() {
+  const [arrivingIds, setArrivingIds] = useState<Set<string>>(new Set());
+  const finishArrival = useCallback((id: string) => {
+    setArrivingIds((previous) => {
+      const next = new Set(previous);
+      next.delete(id);
+      return next;
+    });
+  }, []);
   const [board, dispatch] = useReducer(boardReducer, emptyBoard);
 
   // Characters referenced by cards on the board. The picker searches the API,
@@ -125,9 +133,13 @@ export function Board() {
       <NewCardForm
         onCreate={({ title, character }) => {
           setCharactersById((previous) => new Map(previous).set(character.id, character));
+          const id = crypto.randomUUID();
+          if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setArrivingIds((previous) => new Set(previous).add(id));
+          }
           dispatch({
             type: 'card/added',
-            card: { id: crypto.randomUUID(), title, characterId: character.id },
+            card: { id, title, characterId: character.id },
           });
         }}
       />
@@ -172,6 +184,8 @@ export function Board() {
               cardIds={board.columnOrder[columnId]}
               cards={board.cards}
               charactersById={charactersById}
+              arrivingIds={arrivingIds}
+              onArrivalComplete={finishArrival}
             />
           ))}
         </div>

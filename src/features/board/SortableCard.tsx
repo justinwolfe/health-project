@@ -1,6 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+import { useCallback } from 'react';
+
+import { CardArrival } from './CardArrival';
 import type { LoadedCharacter } from '../characters/types';
 import { CardView } from './CardView';
 import styles from './SortableCard.module.css';
@@ -8,13 +11,18 @@ import type { Card } from './types';
 
 type Props = {
   card: Card;
+  arriving: boolean;
+  onArrivalComplete: (id: string) => void;
   character: LoadedCharacter | undefined;
 };
 
-export function SortableCard({ card, character }: Props) {
+export function SortableCard({ card, character, arriving, onArrivalComplete }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
+    disabled: arriving,
   });
+
+  const finishArrival = useCallback(() => onArrivalComplete(card.id), [card.id, onArrivalComplete]);
 
   const style = {
     // Translate rather than Transform: sortable supplies a scale for size
@@ -34,7 +42,13 @@ export function SortableCard({ card, character }: Props) {
       {...attributes}
       {...listeners}
     >
-      <CardView card={card} character={character} />
+      {arriving ? (
+        <CardArrival onComplete={finishArrival}>
+          <CardView card={card} character={character} />
+        </CardArrival>
+      ) : (
+        <CardView card={card} character={character} />
+      )}
     </li>
   );
 }
