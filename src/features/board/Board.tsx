@@ -12,7 +12,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useCallback, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 
 import type { LoadedCharacter } from '../characters/types';
 import styles from './Board.module.css';
@@ -23,6 +23,9 @@ import { insertionIndex, resolveDropColumn } from './dropTarget';
 import { findColumnOf } from './moveCard';
 import { NewCardForm } from './NewCardForm';
 import { COLUMN_IDS, COLUMN_TITLES, emptyBoard, type ColumnId } from './types';
+
+/** How long the Done portal stays up: the burst, plus a beat to read it. */
+const COMPLETION_MS = 900;
 
 export function Board() {
   const [arrivingIds, setArrivingIds] = useState<Set<string>>(new Set());
@@ -44,7 +47,22 @@ export function Board() {
   // The card most recently finished, and a counter that changes on every
   // completion. The counter is what replays the portal discharge and the card's
   // pass-through, including when the same card is finished twice.
+  //
+  // Cleared once the effect has played, which is also what takes the Done
+  // portal back off screen.
   const [completion, setCompletion] = useState<{ cardId: string; key: number } | null>(null);
+  const completionCount = useRef(0);
+  const completionTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(completionTimer.current), []);
+
+  function playCompletion(cardId: string) {
+    completionCount.current += 1;
+    setCompletion({ cardId, key: completionCount.current });
+
+    window.clearTimeout(completionTimer.current);
+    completionTimer.current = window.setTimeout(() => setCompletion(null), COMPLETION_MS);
+  }
 
   // The column a drag would currently land in. Derived from our own drop-target
   // resolution rather than dnd-kit's per-droppable `isOver`, because as soon as
@@ -91,7 +109,11 @@ export function Board() {
     // Cross-column moves are applied mid-drag so the card visibly enters the
     // new column and the other cards make room. Reordering inside one column is
     // already previewed by SortableContext, so it is settled on drop instead.
-    if (!from || !to || from === to) return;
+    //
+    // Done is the exception: its portal is the preview, and a card sliding into
+    // the column underneath it competes with the effect. The move is left to
+    // the drop.
+    if (!from || !to || from === to || to === 'done') return;
 
     dispatch({
       type: 'card/moved',
@@ -129,7 +151,7 @@ export function Board() {
       origin !== 'done' &&
       !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     ) {
-      setCompletion((previous) => ({ cardId, key: (previous?.key ?? 0) + 1 }));
+      playCompletion(cardId);
     }
   }
 
@@ -217,12 +239,17 @@ export function Board() {
         </div>
 
         <DragOverlay>
-          {activeCard ? (
-            <CardView
-              card={activeCard}
-              character={charactersById.get(activeCard.characterId)}
-              lifted
-            />
+          {/* Over Done the card is hidden and the portal stands in for it, so
+              the drop reads as the card going through rather than a ghost card
+              parked on top of the effect. */}
+          {activeCard && targetColumn !== 'done' ? (
+            <div data-testid="drag-overlay">
+              <CardView
+                card={activeCard}
+                character={charactersById.get(activeCard.characterId)}
+                lifted
+              />
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>

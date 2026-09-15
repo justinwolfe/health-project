@@ -11,32 +11,27 @@ const SPARKS = Array.from({ length: 16 }, (_, index) => ({
 }));
 
 type Props = {
-  /** A card is currently being dragged over Done. */
-  charging: boolean;
   /**
    * Changes each time a card lands in Done. Used as a React key so the burst
    * remounts and replays — re-adding a CSS class alone would not restart it.
-   * Null means no card has landed yet, or motion is reduced.
+   * Null while the portal is merely open and waiting for a drop.
    */
   blastKey: number | null;
 };
 
 /**
- * The portal that sits at the bottom of the Done column and acts as its drop
- * target. Idle it is small and dim; while a card is over it, it brightens and
- * spins up; when a card lands, it discharges.
+ * The portal that opens in the middle of the Done column while a card is
+ * dragged over it, and discharges when one lands.
  *
- * Decorative throughout — the column heading and its empty-state text carry the
+ * It is mounted only for that window — the column owns the decision — so this
+ * component has no idle state and animates itself open as it appears.
+ *
+ * Decorative throughout: the column heading and its empty-state text carry the
  * meaning for assistive technology, so the whole thing is aria-hidden.
  */
-export function DonePortal({ charging, blastKey }: Props) {
+export function DonePortal({ blastKey }: Props) {
   return (
-    <div
-      className={charging ? `${styles.portal} ${styles.charging}` : styles.portal}
-      aria-hidden="true"
-      data-testid="done-portal"
-      data-charging={charging}
-    >
+    <div className={styles.portal} aria-hidden="true" data-testid="done-portal">
       {/* Rendered before the vortex so it lights the portal from behind rather
           than washing it out. Keyed like the burst so it replays with it. */}
       {blastKey === null ? null : <span key={`glow-${blastKey}`} className={styles.glow} />}

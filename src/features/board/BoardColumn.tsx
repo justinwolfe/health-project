@@ -76,11 +76,13 @@ export function BoardColumn({
             </li>
           ) : null}
 
-          {/* Done's drop target is the portal. It lives inside the droppable
-              list so dropping onto it is dropping onto the column. */}
-          {columnId === 'done' ? (
+          {/* Done opens a portal in the middle of its drop zone while a card
+              is over it, and keeps it just long enough to discharge. Absolutely
+              positioned and pointer-events: none, so it overlays the cards
+              without affecting layout or the drop itself. */}
+          {columnId === 'done' && (targeted || completionKey !== null) ? (
             <li className={styles.portalSlot} aria-hidden="true">
-              <DonePortal charging={targeted} blastKey={completionKey} />
+              <DonePortal blastKey={completionKey} />
             </li>
           ) : null}
         </ul>

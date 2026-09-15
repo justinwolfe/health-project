@@ -1,30 +1,32 @@
 .portal {
   position: relative;
-  width: 4.25rem;
+  width: 5.5rem;
   aspect-ratio: 1;
-  margin: var(--space-2) auto 0;
   pointer-events: none;
 
-  /* Idle: present enough to read as the drop target, quiet enough not to
-     compete with the cards above it. */
-  opacity: 0.5;
-  transform: scale(0.92);
-  filter: drop-shadow(0 0 5px #9de94f44);
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease,
-    filter 180ms ease;
-}
-
-/* Charging: the portal reacts before the drop, so the target is unmistakable. */
-.charging {
-  opacity: 1;
-  transform: scale(1.18);
+  /* Only ever on screen while a card is over Done or landing, so it is always
+     at full strength and spun up — there is no idle state to be quiet for. */
   filter: drop-shadow(0 0 12px #9de94faa) drop-shadow(0 0 28px #6acb4566);
+
   /* Consumed by PortalVortex.module.css. */
   --portal-swirl: 850ms;
   --portal-sparks: 2000ms;
   --portal-undulate: 380ms;
+
+  animation: portalOpen 260ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes portalOpen {
+  from {
+    opacity: 0;
+    scale: 0.2;
+    rotate: -40deg;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+  }
 }
 
 .blast {
@@ -150,7 +152,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .portal {
-    transition: none;
+    animation: none;
   }
   .blast,
   .glow {

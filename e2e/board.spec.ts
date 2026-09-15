@@ -54,6 +54,16 @@ test('refuses a card with a blank title', async ({ page }) => {
   await expect(column(page, 'todo').getByTestId('card')).toHaveCount(0);
 });
 
+test('keeps showing the dragged card over columns other than Done', async ({ page }) => {
+  await addCard(page, 'Still visible', 'Morty Smith');
+
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'doing'), {
+    hold: true,
+  });
+  await expect(page.getByTestId('drag-overlay')).toHaveCount(1);
+  await page.mouse.up();
+});
+
 test('drags a card from To Do into Doing', async ({ page }) => {
   await addCard(page, 'Investigate the anomaly', 'Morty Smith');
 
@@ -94,6 +104,8 @@ test('discharges the Done portal when a card reaches it', async ({ page }) => {
 
   await expect(column(page, 'done').getByTestId('card')).toContainText('Ship the board');
   await expect(column(page, 'done').getByTestId('portal-blast')).toBeAttached();
+  // The whole portal then leaves, rather than sitting in the column.
+  await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
 });
 
 test.describe('with reduced motion requested', () => {
@@ -105,9 +117,8 @@ test.describe('with reduced motion requested', () => {
     await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
 
     await expect(column(page, 'done').getByTestId('card')).toContainText('Quietly done');
-    // The portal stays as the drop target; only the burst is suppressed.
-    await expect(column(page, 'done').getByTestId('done-portal')).toBeVisible();
     await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(0);
+    await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
   });
 });
 
@@ -133,23 +144,63 @@ test('skips the portal when reduced motion is requested', async ({ page }) => {
   );
 });
 
-test('shows a portal as the Done drop target that charges while dragging over it', async ({
-  page,
-}) => {
+test('opens the Done portal only while a card is over it', async ({ page }) => {
   await addCard(page, 'Charge it up', 'Rick Sanchez');
 
   const portal = column(page, 'done').getByTestId('done-portal');
-  await expect(portal).toBeVisible();
-  await expect(portal).toHaveAttribute('data-charging', 'false');
+  await expect(portal).toHaveCount(0);
 
   // Hold the drag over Done rather than completing it, to catch the mid-drag state.
   await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'), {
     hold: true,
   });
-  await expect(portal).toHaveAttribute('data-charging', 'true');
+  await expect(portal).toBeVisible();
 
   await page.mouse.up();
-  await expect(portal).toHaveAttribute('data-charging', 'false');
+  await expect(column(page, 'done').getByTestId('portal-blast')).toBeAttached();
+  // And it leaves once the discharge has played.
+  await expect(portal).toHaveCount(0);
+});
+
+test('shows only the portal in Done while dragging, not a preview of the card', async ({
+  page,
+}) => {
+  await addCard(page, 'No preview please', 'Rick Sanchez');
+
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'), {
+    hold: true,
+  });
+
+  await expect(column(page, 'done').getByTestId('done-portal')).toBeVisible();
+  await expect(column(page, 'done').getByTestId('card')).toHaveCount(0);
+  // The dragged card is not shown over Done either: no list preview and no
+  // drag ghost, so the portal is the only thing in the drop target.
+  await expect(page.getByTestId('drag-overlay')).toHaveCount(0);
+  // Still on the board, just not previewed into Done. It sits in Doing, which
+  // the drag crossed on the way over and which does still preview.
+  await expect(page.getByTestId('card')).toHaveCount(1);
+
+  await page.mouse.up();
+  await expect(column(page, 'done').getByTestId('card')).toHaveCount(1);
+});
+
+test('closes the Done portal again when the drag moves away without dropping', async ({ page }) => {
+  await addCard(page, 'Not yet done', 'Rick Sanchez');
+
+  const portal = column(page, 'done').getByTestId('done-portal');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'), {
+    hold: true,
+  });
+  await expect(portal).toBeVisible();
+
+  // Drag back out to Doing; the portal should not linger.
+  const doing = await column(page, 'doing').boundingBox();
+  if (!doing) throw new Error('Doing column is not visible');
+  await page.mouse.move(doing.x + doing.width / 2, doing.y + doing.height / 2, { steps: 8 });
+  await expect(portal).toHaveCount(0);
+
+  await page.mouse.up();
+  await expect(column(page, 'doing').getByTestId('card')).toHaveCount(1);
 });
 
 test('replays the discharge when a second card is finished', async ({ page }) => {
@@ -161,6 +212,6 @@ test('replays the discharge when a second card is finished', async ({ page }) =>
   await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
 
   await expect(column(page, 'done').getByTestId('card')).toHaveCount(2);
-  // One burst at a time: the previous one is replaced, not stacked.
+  // One burst at a time: the previous portal has already left.
   await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(1);
 });
