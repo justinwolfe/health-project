@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Output: Vite transpiles, tsc only type-checks. */
+    "noEmit": true,
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "types": ["vite/client", "node"],
+
+    /* Keep source compatible with transpile-only bundlers: no emit-dependent
+       syntax (enums with side effects, parameter properties, namespaces). */
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+
+    /* Strictness. noUncheckedIndexedAccess matters here: the board stores
+       ordered card-id arrays, and it forces honest handling of index lookups. */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedSideEffectImports": true,
+
+    "skipLibCheck": true
+  },
+  "include": ["src", "e2e", "vite.config.ts", "codegen.ts", "playwright.config.ts"]
+}

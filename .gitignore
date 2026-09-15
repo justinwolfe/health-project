@@ -1,0 +1,21 @@
+node_modules
+dist
+dist-ssr
+
+# Playwright
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
+# tsc / vite caches
+*.tsbuildinfo
+node_modules/.tmp
+
+# Env & local overrides
+.env
+.env.*
+!.env.example
+*.local
+
+.DS_Store
