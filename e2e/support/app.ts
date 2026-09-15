@@ -104,8 +104,10 @@ export async function dragWithKeyboard(page: Page, card: Locator, keys: string[]
   await page.keyboard.press('Space');
 
   // dnd-kit sets aria-pressed on the lifted item — a real signal that the drag
-  // has begun, rather than a fixed sleep.
+  // has begun, rather than a fixed sleep. The frame after it is for the first
+  // measuring pass, which is what the arrow keys search.
   await page.locator('[data-testid="card"][aria-pressed="true"]').waitFor();
+  await nextFrame(page);
 
   for (const key of keys) {
     await page.keyboard.press(key);

@@ -181,3 +181,8 @@ Two traps that cost real time here, both encoded in that file:
 
 Keyboard drags need a frame between keypresses; `dragWithKeyboard()` waits on
 dnd-kit's `aria-pressed` and then on animation frames rather than sleeping.
+
+`DndContext` uses `MeasuringStrategy.Always` for droppables. This is not a test
+workaround: cards entering and leaving change every column's height mid-drag,
+and with dnd-kit's default one-shot measuring the keyboard sensor searches stale
+rects and intermittently finds no column to move into.

@@ -2,6 +2,7 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
+  MeasuringStrategy,
   PointerSensor,
   closestCorners,
   useSensor,
@@ -143,6 +144,11 @@ export function Board() {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
+        // Re-measure droppables continuously rather than only at drag start.
+        // Cards entering and leaving change every column's height mid-drag, and
+        // with one-shot measuring the keyboard sensor searches stale rects — it
+        // can find no column to move into at all.
+        measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         accessibility={{
           screenReaderInstructions: {
             draggable:
