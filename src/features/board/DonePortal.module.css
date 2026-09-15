@@ -1,0 +1,159 @@
+.portal {
+  position: relative;
+  width: 4.25rem;
+  aspect-ratio: 1;
+  margin: var(--space-2) auto 0;
+  pointer-events: none;
+
+  /* Idle: present enough to read as the drop target, quiet enough not to
+     compete with the cards above it. */
+  opacity: 0.5;
+  transform: scale(0.92);
+  filter: drop-shadow(0 0 5px #9de94f44);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    filter 180ms ease;
+}
+
+/* Charging: the portal reacts before the drop, so the target is unmistakable. */
+.charging {
+  opacity: 1;
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 12px #9de94faa) drop-shadow(0 0 28px #6acb4566);
+  /* Consumed by PortalVortex.module.css. */
+  --portal-swirl: 850ms;
+  --portal-sparks: 2000ms;
+  --portal-undulate: 380ms;
+}
+
+.blast {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The portal flaring, behind the art. Green rather than white: on the light
+   board a white flash reads as the portal being erased, not lit. */
+.glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #b6ff6a 0%, #57c03a 38%, transparent 70%);
+  animation: glow 620ms ease-out both;
+}
+
+.ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  /* Saturated enough to read against the light column, unlike the lime used
+     inside the portal art. */
+  border: 4px solid #3f9f27;
+  border-radius: 50%;
+  animation: ring 760ms cubic-bezier(0.15, 0.75, 0.3, 1) both;
+}
+
+.ringLate {
+  border-width: 2px;
+  border-color: #7ed957;
+  animation-delay: 120ms;
+}
+
+/* Keeps the portal lit while it discharges, instead of snapping back to its
+   idle dimness the instant the drag ends. `screen` brightens the art beneath
+   rather than painting over it. */
+.afterglow {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #9dff5e 0%, #4fbf2e 55%, transparent 76%);
+  mix-blend-mode: screen;
+  animation: afterglow 720ms ease-out both;
+}
+
+.spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #3f9f27;
+  animation: spark 720ms cubic-bezier(0.1, 0.7, 0.3, 1) both;
+}
+
+/* Two-tone flecks, so the burst does not read as one flat colour. Scoped to
+   .spark rather than nth-child on the parent, whose first children are the
+   afterglow and rings. */
+.spark.alt {
+  background: #8fdc4b;
+  width: 5px;
+  height: 5px;
+}
+
+@keyframes glow {
+  from {
+    opacity: 0.95;
+    scale: 0.45;
+  }
+  to {
+    opacity: 0;
+    scale: 2.1;
+  }
+}
+
+@keyframes ring {
+  from {
+    opacity: 0.9;
+    scale: 0.35;
+  }
+  to {
+    opacity: 0;
+    scale: 3.4;
+  }
+}
+
+/*
+ * The transform shorthand, not the individual translate/rotate properties:
+ * those always apply in the fixed order translate, rotate, scale, so a spark
+ * moved sideways and then span on the spot instead of orbiting outwards. Here
+ * the rotate comes first and the translateX runs along the rotated axis.
+ */
+@keyframes spark {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateX(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateX(var(--spark-distance))
+      scale(0.15);
+    opacity: 0;
+  }
+}
+
+@keyframes afterglow {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal {
+    transition: none;
+  }
+  .blast,
+  .glow {
+    display: none;
+  }
+}

@@ -92,7 +92,12 @@ export function cardTitles(page: Page, columnId: 'todo' | 'doing' | 'done') {
  * a single jump from source to target registers as neither a drag nor a drop.
  * Hence the stepped movement, and the settle move at the end before releasing.
  */
-export async function dragTo(page: Page, source: Locator, target: Locator) {
+export async function dragTo(
+  page: Page,
+  source: Locator,
+  target: Locator,
+  options: { hold?: boolean } = {},
+) {
   await expect(source).not.toHaveAttribute('aria-disabled', 'true');
   const from = await source.boundingBox();
   const to = await target.boundingBox();
@@ -113,7 +118,9 @@ export async function dragTo(page: Page, source: Locator, target: Locator) {
   }
 
   await page.mouse.move(end.x, end.y);
-  await page.mouse.up();
+  // `hold` leaves the button down so a test can assert the mid-drag state; it
+  // must release the mouse itself.
+  if (!options.hold) await page.mouse.up();
 }
 
 /** Lets the browser paint before the next key, so dnd-kit can settle a move. */

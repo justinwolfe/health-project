@@ -19,11 +19,10 @@ import styles from './Board.module.css';
 import { BoardColumn } from './BoardColumn';
 import { boardReducer } from './boardReducer';
 import { CardView } from './CardView';
-import { celebrate, originFromRect } from './celebrate';
 import { insertionIndex, resolveDropColumn } from './dropTarget';
 import { findColumnOf } from './moveCard';
 import { NewCardForm } from './NewCardForm';
-import { COLUMN_IDS, COLUMN_TITLES, emptyBoard } from './types';
+import { COLUMN_IDS, COLUMN_TITLES, emptyBoard, type ColumnId } from './types';
 
 export function Board() {
   const [arrivingIds, setArrivingIds] = useState<Set<string>>(new Set());
@@ -41,6 +40,17 @@ export function Board() {
   // character it was created with rather than look it up in the current
   // results, where it may no longer be.
   const [charactersById, setCharactersById] = useState<Map<string, LoadedCharacter>>(new Map());
+
+  // The card most recently finished, and a counter that changes on every
+  // completion. The counter is what replays the portal discharge and the card's
+  // pass-through, including when the same card is finished twice.
+  const [completion, setCompletion] = useState<{ cardId: string; key: number } | null>(null);
+
+  // The column a drag would currently land in. Derived from our own drop-target
+  // resolution rather than dnd-kit's per-droppable `isOver`, because as soon as
+  // a card moves into a column mid-drag the pointer is over that card and the
+  // column's own droppable stops reporting isOver.
+  const [targetColumn, setTargetColumn] = useState<ColumnId | null>(null);
 
   // Drives the DragOverlay. The card is still in the board while dragging; this
   // only records which one to render following the pointer.
@@ -66,12 +76,17 @@ export function Board() {
 
   function handleDragOver(event: DragOverEvent) {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      setTargetColumn(null);
+      return;
+    }
 
     const cardId = String(active.id);
     const overId = String(over.id);
     const from = findColumnOf(board, cardId);
     const to = resolveDropColumn(board, overId);
+
+    setTargetColumn(to ?? null);
 
     // Cross-column moves are applied mid-drag so the card visibly enters the
     // new column and the other cards make room. Reordering inside one column is
@@ -89,6 +104,7 @@ export function Board() {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveCardId(null);
+    setTargetColumn(null);
 
     const origin = originColumnRef.current;
     originColumnRef.current = null;
@@ -106,13 +122,20 @@ export function Board() {
       toIndex: insertionIndex(board, to, overId),
     });
 
-    if (to === 'done' && origin !== 'done') {
-      celebrate(originFromRect(over.rect));
+    // Matches how arrivals are handled: the effect is not created at all under
+    // reduced motion, rather than created and then hidden.
+    if (
+      to === 'done' &&
+      origin !== 'done' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      setCompletion((previous) => ({ cardId, key: (previous?.key ?? 0) + 1 }));
     }
   }
 
   function handleDragCancel() {
     setActiveCardId(null);
+    setTargetColumn(null);
     originColumnRef.current = null;
   }
 
@@ -186,6 +209,9 @@ export function Board() {
               charactersById={charactersById}
               arrivingIds={arrivingIds}
               onArrivalComplete={finishArrival}
+              targeted={targetColumn === columnId}
+              completedCardId={completion?.cardId ?? null}
+              completionKey={completion?.key ?? null}
             />
           ))}
         </div>

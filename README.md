@@ -2,7 +2,14 @@
 
 A frontend-only Kanban board — **To Do / Doing / Done** — where every card is
 assigned a Rick and Morty character. Cards drag between columns and reorder
-within a column, and reaching Done is celebrated.
+within a column.
+
+Both flourishes use one piece of art, a procedurally drawn portal: a new card
+materialises into To Do through one, and Done's drop target _is_ a portal that
+idles dim, brightens and spins up as you drag a card over it, then discharges —
+shockwave, sparks and all — when the card lands. No confetti, no animation
+dependency; everything is SVG and CSS, and both effects are skipped entirely
+under `prefers-reduced-motion`.
 
 ## Running it
 
@@ -32,7 +39,8 @@ First e2e run only: `npx playwright install chromium`.
   GraphQL API. Components declare the fields they need as fragments; fragment
   masking means a component can only read what it declared.
 - **dnd-kit** for drag and drop, including keyboard-driven dragging.
-- **CSS Modules** with design tokens in one stylesheet.
+- **CSS Modules** with design tokens in one stylesheet; the portal effects are
+  hand-drawn SVG plus keyframes, with no animation library.
 - **Vitest** for pure logic, **Playwright** for anything involving the DOM.
 
 ## How it is organised

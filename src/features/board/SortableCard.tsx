@@ -13,10 +13,21 @@ type Props = {
   card: Card;
   arriving: boolean;
   onArrivalComplete: (id: string) => void;
+  /**
+   * Changes each time this card lands in Done. Used as a React key so the
+   * animation replays: re-adding the class alone would not restart it.
+   */
+  completionKey: number | null;
   character: LoadedCharacter | undefined;
 };
 
-export function SortableCard({ card, character, arriving, onArrivalComplete }: Props) {
+export function SortableCard({
+  card,
+  character,
+  arriving,
+  onArrivalComplete,
+  completionKey,
+}: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     disabled: arriving,
@@ -47,7 +58,14 @@ export function SortableCard({ card, character, arriving, onArrivalComplete }: P
           <CardView card={card} character={character} />
         </CardArrival>
       ) : (
-        <CardView card={card} character={character} />
+        // Keyed so a repeat completion remounts this wrapper and replays the
+        // pass-through; 'rest' is the steady state, which animates nothing.
+        <div
+          key={completionKey ?? 'rest'}
+          className={completionKey === null ? undefined : styles.completed}
+        >
+          <CardView card={card} character={character} />
+        </div>
       )}
     </li>
   );

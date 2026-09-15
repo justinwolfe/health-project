@@ -87,26 +87,27 @@ test('moves a card with the keyboard alone', async ({ page }) => {
   await expect(column(page, 'doing').getByTestId('card')).toContainText('Keyboard only');
 });
 
-test('celebrates when a card reaches Done', async ({ page }) => {
+test('discharges the Done portal when a card reaches it', async ({ page }) => {
   await addCard(page, 'Ship the board', 'Rick Sanchez');
 
   await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
 
   await expect(column(page, 'done').getByTestId('card')).toContainText('Ship the board');
-  // canvas-confetti renders into a canvas it appends to the document.
-  await expect(page.locator('canvas')).toBeAttached();
+  await expect(column(page, 'done').getByTestId('portal-blast')).toBeAttached();
 });
 
 test.describe('with reduced motion requested', () => {
   test.use({ reducedMotion: 'reduce' });
 
-  test('moves the card to Done without firing confetti', async ({ page }) => {
+  test('moves the card to Done without discharging the portal', async ({ page }) => {
     await addCard(page, 'Quietly done', 'Morty Smith');
 
     await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
 
     await expect(column(page, 'done').getByTestId('card')).toContainText('Quietly done');
-    await expect(page.locator('canvas')).toHaveCount(0);
+    // The portal stays as the drop target; only the burst is suppressed.
+    await expect(column(page, 'done').getByTestId('done-portal')).toBeVisible();
+    await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(0);
   });
 });
 
@@ -130,4 +131,36 @@ test('skips the portal when reduced motion is requested', async ({ page }) => {
     'aria-disabled',
     'true',
   );
+});
+
+test('shows a portal as the Done drop target that charges while dragging over it', async ({
+  page,
+}) => {
+  await addCard(page, 'Charge it up', 'Rick Sanchez');
+
+  const portal = column(page, 'done').getByTestId('done-portal');
+  await expect(portal).toBeVisible();
+  await expect(portal).toHaveAttribute('data-charging', 'false');
+
+  // Hold the drag over Done rather than completing it, to catch the mid-drag state.
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'), {
+    hold: true,
+  });
+  await expect(portal).toHaveAttribute('data-charging', 'true');
+
+  await page.mouse.up();
+  await expect(portal).toHaveAttribute('data-charging', 'false');
+});
+
+test('replays the discharge when a second card is finished', async ({ page }) => {
+  await addCard(page, 'First done', 'Rick Sanchez');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+  await expect(column(page, 'done').getByTestId('card')).toHaveCount(1);
+
+  await addCard(page, 'Second done', 'Morty Smith');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+
+  await expect(column(page, 'done').getByTestId('card')).toHaveCount(2);
+  // One burst at a time: the previous one is replaced, not stacked.
+  await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(1);
 });

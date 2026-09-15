@@ -13,3 +13,36 @@
 .placeholder {
   opacity: 0.35;
 }
+
+/*
+ * The card that just landed in Done dips toward the portal below it and springs
+ * back, lit green — it reads as having passed through rather than merely
+ * arrived.
+ */
+.completed {
+  animation: throughPortal 640ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+@keyframes throughPortal {
+  0% {
+    transform: translateY(0) scale(1) rotate(0);
+  }
+  32% {
+    transform: translateY(14px) scale(0.84) rotate(-2.5deg);
+    filter: brightness(1.4) drop-shadow(0 0 12px #9de94f);
+  }
+  62% {
+    transform: translateY(-3px) scale(1.04) rotate(1.5deg);
+    filter: brightness(1.12) drop-shadow(0 0 7px #9de94f99);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0);
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .completed {
+    animation: none;
+  }
+}

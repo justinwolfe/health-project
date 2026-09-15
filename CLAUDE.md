@@ -91,6 +91,9 @@ src/
     characters.ts              # the Characters query
   features/
     board/
+      PortalVortex.tsx         # the portal art, shared by both effects
+      CardArrival.tsx          # a new card materialises in To Do
+      DonePortal.tsx           # Done's drop target, charges and discharges
       Board.tsx                # owns board state + all dnd-kit wiring
       BoardColumn.tsx          # one column: droppable + SortableContext
       SortableCard.tsx         # dnd wiring for a single card
@@ -197,6 +200,32 @@ they are distinct characters.
 with (in a map on `Board`), rather than looking it up in the current search
 results, where it will usually no longer be. The board's own types stay free of
 GraphQL types, which is what keeps the reducer tests trivial.
+
+**The portal effects.** One piece of art, `PortalVortex`, in two situations: a
+card materialises into To Do through a portal (`CardArrival`), and Done's drop
+target _is_ a portal (`DonePortal`) that idles dim, brightens and spins up while
+a card is over it, then discharges when one lands. There is no confetti and no
+`canvas-confetti` dependency — the portal is the board's one visual vocabulary.
+
+Things that are easy to get wrong here:
+
+- Both effects are **not created at all** under `prefers-reduced-motion`, rather
+  than created and hidden. The portal itself stays visible in Done because it is
+  the drop target, not decoration.
+- Replaying a CSS animation needs a **new element**, not a re-added class. Both
+  effects key on a counter that changes per occurrence, so finishing the same
+  card twice replays properly.
+- Swirl speeds are CSS custom properties on `PortalVortex`, so the charging
+  state can spin it up without redefining the animation.
+- Sparks use the `transform` shorthand, not the individual `translate`/`rotate`
+  properties. Those always apply in the order translate, rotate, scale, so a
+  spark moved sideways and then span on the spot instead of orbiting outwards.
+
+**Column targeting does not use dnd-kit's `isOver`.** `Board` derives
+`targetColumn` from its own `resolveDropColumn`, because `onDragOver` moves a
+card into a column mid-drag — after which the pointer is over that _card_ and
+the column's own droppable stops reporting `isOver`. The Done portal would never
+charge, and the column highlight would rarely show.
 
 **Styling.** Use tokens from `styles/tokens.css`; do not write raw colors or
 pixel spacing in a component's CSS module. Respect
