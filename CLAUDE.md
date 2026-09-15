@@ -211,12 +211,23 @@ Done's portal is transient by design: mounted only while the column is targeted
 or discharging, then unmounted. `Board` clears `completion` on a timer
 (`COMPLETION_MS`), and that clearing is what takes the portal off screen.
 
-Done also suppresses **both** previews of the dragged card, so the portal is the
-only thing in the drop target: `handleDragOver` does not move the card into Done
-mid-drag (every other column still does), and the `DragOverlay` renders nothing
-while Done is targeted. The drag ghost is the one that actually mattered —
-dnd-kit renders it in a fixed layer above the page, so it sat squarely on top of
-the portal, and no amount of z-index inside the column would have moved it.
+Two rules keep the drop zone clear for it:
+
+- **The portal opens only for a card arriving from another column.** Reordering
+  inside Done is an ordinary sort. `Board` tracks `dragOrigin` in state — not a
+  ref — precisely because the render needs it to decide this.
+- **`handleDragOver` does not move the card into Done mid-drag**, unlike every
+  other column. That move leaves a faded placeholder sitting exactly where the
+  portal opens. The card still follows the cursor in the `DragOverlay`; only
+  the in-column placeholder is withheld, and the move settles on the drop.
+
+Done also has no empty-state placeholder text: the portal is its affordance, and
+the heading and count already say the column is empty.
+
+Worth knowing if the portal ever looks like it is painted behind something:
+dnd-kit renders the `DragOverlay` in a fixed layer above the page, so it will
+sit on top of the portal no matter what z-index the column uses. That is
+expected, not a stacking bug.
 
 Things that are easy to get wrong here:
 

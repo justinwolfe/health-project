@@ -75,9 +75,11 @@ export function Board() {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
 
   // Where the drag began. Needed because handleDragOver may already have moved
-  // the card into Done before the drop, which would make "did it just arrive?"
-  // unanswerable at drop time.
-  const originColumnRef = useRef<string | null>(null);
+  // the card into another column before the drop, which would make "did it just
+  // arrive?" unanswerable at drop time. State rather than a ref because the
+  // render reads it: a card being reordered inside Done must not open the
+  // portal, which only marks a card arriving from elsewhere.
+  const [dragOrigin, setDragOrigin] = useState<ColumnId | null>(null);
 
   const sensors = useSensors(
     // A small distance threshold so a click inside a card is not swallowed as
@@ -89,7 +91,7 @@ export function Board() {
   function handleDragStart(event: DragStartEvent) {
     const cardId = String(event.active.id);
     setActiveCardId(cardId);
-    originColumnRef.current = findColumnOf(board, cardId) ?? null;
+    setDragOrigin(findColumnOf(board, cardId) ?? null);
   }
 
   function handleDragOver(event: DragOverEvent) {
@@ -110,9 +112,10 @@ export function Board() {
     // new column and the other cards make room. Reordering inside one column is
     // already previewed by SortableContext, so it is settled on drop instead.
     //
-    // Done is the exception: its portal is the preview, and a card sliding into
-    // the column underneath it competes with the effect. The move is left to
-    // the drop.
+    // Done is the exception. Moving the card in mid-drag leaves a faded
+    // placeholder sitting in the drop zone, which is exactly where the portal
+    // opens. The card still follows the cursor; only the placeholder is
+    // withheld, and the move is settled on the drop.
     if (!from || !to || from === to || to === 'done') return;
 
     dispatch({
@@ -128,8 +131,8 @@ export function Board() {
     setActiveCardId(null);
     setTargetColumn(null);
 
-    const origin = originColumnRef.current;
-    originColumnRef.current = null;
+    const origin = dragOrigin;
+    setDragOrigin(null);
     if (!over) return;
 
     const cardId = String(active.id);
@@ -158,7 +161,7 @@ export function Board() {
   function handleDragCancel() {
     setActiveCardId(null);
     setTargetColumn(null);
-    originColumnRef.current = null;
+    setDragOrigin(null);
   }
 
   // Screen-reader announcements read from board state, so these live in scope.
@@ -170,6 +173,10 @@ export function Board() {
     const column = resolveDropColumn(board, overId);
     return column ? COLUMN_TITLES[column] : 'an unknown column';
   }
+
+  // A card being brought into Done from another column. Reordering inside Done
+  // is an ordinary sort: no portal, and the dragged card stays visible.
+  const enteringDone = targetColumn === 'done' && dragOrigin !== null && dragOrigin !== 'done';
 
   const activeCard = activeCardId ? board.cards[activeCardId] : undefined;
 
@@ -232,6 +239,7 @@ export function Board() {
               arrivingIds={arrivingIds}
               onArrivalComplete={finishArrival}
               targeted={targetColumn === columnId}
+              portalOpen={enteringDone}
               completedCardId={completion?.cardId ?? null}
               completionKey={completion?.key ?? null}
             />
@@ -239,10 +247,7 @@ export function Board() {
         </div>
 
         <DragOverlay>
-          {/* Over Done the card is hidden and the portal stands in for it, so
-              the drop reads as the card going through rather than a ghost card
-              parked on top of the effect. */}
-          {activeCard && targetColumn !== 'done' ? (
+          {activeCard ? (
             <div data-testid="drag-overlay">
               <CardView
                 card={activeCard}

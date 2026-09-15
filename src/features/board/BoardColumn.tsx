@@ -14,6 +14,8 @@ type Props = {
   charactersById: Map<string, LoadedCharacter>;
   /** This column is where the current drag would land. */
   targeted: boolean;
+  /** Only meaningful for Done: a card is arriving from another column. */
+  portalOpen: boolean;
   arrivingIds: Set<string>;
   onArrivalComplete: (id: string) => void;
   /** Set on the card that just landed here, to play its pass-through. */
@@ -28,6 +30,7 @@ export function BoardColumn({
   cards,
   charactersById,
   targeted,
+  portalOpen,
   arrivingIds,
   onArrivalComplete,
   completedCardId,
@@ -70,17 +73,17 @@ export function BoardColumn({
             );
           })}
 
-          {cardIds.length === 0 ? (
-            <li className={styles.empty}>
-              {columnId === 'done' ? 'Drop a card here to finish it' : 'Drop a card here'}
-            </li>
+          {/* Done has no placeholder: the portal is its affordance, and the
+              heading and count already say the column is empty. */}
+          {cardIds.length === 0 && columnId !== 'done' ? (
+            <li className={styles.empty}>Drop a card here</li>
           ) : null}
 
           {/* Done opens a portal in the middle of its drop zone while a card
               is over it, and keeps it just long enough to discharge. Absolutely
               positioned and pointer-events: none, so it overlays the cards
               without affecting layout or the drop itself. */}
-          {columnId === 'done' && (targeted || completionKey !== null) ? (
+          {columnId === 'done' && (portalOpen || completionKey !== null) ? (
             <li className={styles.portalSlot} aria-hidden="true">
               <DonePortal blastKey={completionKey} />
             </li>

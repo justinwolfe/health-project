@@ -6,10 +6,10 @@ within a column.
 
 Both flourishes use one piece of art, a procedurally drawn portal: a new card
 materialises into To Do through one, and a portal opens in the middle of Done as
-you drag a card over it — the card itself disappears, so the portal is all you
-see — then discharges with a shockwave and sparks as the card lands, and closes
-again. No confetti, no animation dependency; everything is SVG and CSS, and both
-effects are skipped entirely under `prefers-reduced-motion`.
+you drag a card in from another column, discharging with a shockwave and sparks
+as the card lands, then closing again. Reordering within Done is left alone. No
+confetti, no animation dependency; everything is SVG and CSS, and both effects
+are skipped entirely under `prefers-reduced-motion`.
 
 ## Running it
 

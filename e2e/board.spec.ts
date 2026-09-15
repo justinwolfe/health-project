@@ -54,13 +54,21 @@ test('refuses a card with a blank title', async ({ page }) => {
   await expect(column(page, 'todo').getByTestId('card')).toHaveCount(0);
 });
 
-test('keeps showing the dragged card over columns other than Done', async ({ page }) => {
+test('keeps the dragged card under the cursor over every column, Done included', async ({
+  page,
+}) => {
   await addCard(page, 'Still visible', 'Morty Smith');
 
   await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'doing'), {
     hold: true,
   });
   await expect(page.getByTestId('drag-overlay')).toHaveCount(1);
+
+  const done = await column(page, 'done').boundingBox();
+  if (!done) throw new Error('Done column is not visible');
+  await page.mouse.move(done.x + done.width / 2, done.y + done.height / 2, { steps: 8 });
+  await expect(page.getByTestId('drag-overlay')).toHaveCount(1);
+
   await page.mouse.up();
 });
 
@@ -162,26 +170,47 @@ test('opens the Done portal only while a card is over it', async ({ page }) => {
   await expect(portal).toHaveCount(0);
 });
 
-test('shows only the portal in Done while dragging, not a preview of the card', async ({
-  page,
-}) => {
-  await addCard(page, 'No preview please', 'Rick Sanchez');
+test('does not drop a placeholder card into Done while dragging over it', async ({ page }) => {
+  await addCard(page, 'No placeholder please', 'Rick Sanchez');
 
   await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'), {
     hold: true,
   });
 
   await expect(column(page, 'done').getByTestId('done-portal')).toBeVisible();
+  // Nothing sits in the drop zone underneath the portal.
   await expect(column(page, 'done').getByTestId('card')).toHaveCount(0);
-  // The dragged card is not shown over Done either: no list preview and no
-  // drag ghost, so the portal is the only thing in the drop target.
-  await expect(page.getByTestId('drag-overlay')).toHaveCount(0);
-  // Still on the board, just not previewed into Done. It sits in Doing, which
-  // the drag crossed on the way over and which does still preview.
+  // The card is still on the board and still under the cursor.
   await expect(page.getByTestId('card')).toHaveCount(1);
+  await expect(page.getByTestId('drag-overlay')).toHaveCount(1);
 
   await page.mouse.up();
   await expect(column(page, 'done').getByTestId('card')).toHaveCount(1);
+});
+
+test('does not open the portal when reordering inside Done', async ({ page }) => {
+  await addCard(page, 'First finished', 'Rick Sanchez');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+  await addCard(page, 'Second finished', 'Morty Smith');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+
+  await expect(column(page, 'done').getByTestId('card')).toHaveCount(2);
+  await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
+
+  // Reordering within Done is an ordinary sort, not an arrival.
+  const cards = column(page, 'done').getByTestId('card');
+  await dragTo(page, cards.first(), cards.last(), { hold: true });
+  await expect(column(page, 'done').getByTestId('done-portal')).toHaveCount(0);
+
+  await page.mouse.up();
+  await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(0);
+});
+
+test('gives Done no placeholder text', async ({ page }) => {
+  await expect(column(page, 'done')).not.toContainText('Drop a card here');
+  // The other columns keep theirs.
+  await expect(column(page, 'todo')).toContainText('Drop a card here');
+  await expect(column(page, 'doing')).toContainText('Drop a card here');
 });
 
 test('closes the Done portal again when the drag moves away without dropping', async ({ page }) => {
