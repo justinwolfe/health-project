@@ -54,6 +54,13 @@ and the highlighted option is conveyed with `aria-activedescendant`.
 A card keeps the character it was created with, rather than looking it up in
 whatever the picker currently has loaded.
 
+**On duplicate names.** The API returns four Rick Sanchezes — alternate-dimension
+versions of the same person, which is the show's premise rather than bad data.
+46 of the 826 characters' names are shared this way. Each row therefore shows
+species, sub-type and home dimension alongside the status, which separates most
+of them; where even that is identical (four SEAL Team Ricks match down to the
+episode) the id is appended, but only on the rows that actually clash.
+
 ```
 src/
   graphql/       urql client + queries

@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { getFragmentData } from '../../gql';
 import { CharacterPickerOptionFragment } from './CharacterPicker.graphql';
 import styles from './CharacterPicker.module.css';
+import { describeCharacters } from './describeCharacter';
 import type { LoadedCharacter } from './types';
 import { useCharacterSearch } from './useCharacterSearch';
 
@@ -38,6 +39,14 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const options = getFragmentData(CharacterPickerOptionFragment, characters);
+  // Described as a set, so the id is only shown on rows it is needed to tell
+  // apart — see describeCharacter.ts.
+  const descriptions = describeCharacters(
+    options.map((option, index) => ({
+      ...option,
+      id: option.id ?? String(index),
+    })),
+  );
   const loadMoreIndex = hasMore ? options.length : -1;
   const lastIndex = hasMore ? options.length : options.length - 1;
 
@@ -214,9 +223,21 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
               ) : (
                 <span className={styles.avatarFallback} aria-hidden="true" />
               )}
-              <span className={styles.name}>{option.name}</span>
-              <span className={styles.meta}>
-                {[option.species, option.status].filter(Boolean).join(' · ')}
+
+              <span className={styles.text}>
+                <span className={styles.name}>
+                  {option.name}
+                  {descriptions[index]?.disambiguator ? (
+                    <span className={styles.characterId}> {descriptions[index].disambiguator}</span>
+                  ) : null}
+                </span>
+                {descriptions[index]?.detail ? (
+                  <span className={styles.detail}>{descriptions[index].detail}</span>
+                ) : null}
+              </span>
+
+              <span className={styles.statusBadge} data-status={descriptions[index]?.status}>
+                {descriptions[index]?.status}
               </span>
             </li>
           ))}
@@ -246,7 +267,7 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
       ) : null}
 
       {/* Announces result counts without stealing focus or interrupting typing. */}
-      <div className={styles.status} id={statusId} role="status">
+      <div className={styles.liveRegion} id={statusId} role="status">
         {open
           ? describeResults({ count: options.length, total, fetching: fetching || pending })
           : ''}

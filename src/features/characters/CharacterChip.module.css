@@ -22,8 +22,11 @@
   text-overflow: ellipsis;
 }
 
-.species {
+.detail {
   color: var(--color-text-muted);
   font-size: 0.8125rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }

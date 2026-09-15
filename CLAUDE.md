@@ -103,6 +103,8 @@ src/
       types.ts                 # ColumnId, Card, BoardState
       *.test.ts                # pure logic only
     characters/
+      describeCharacter.ts     # disambiguates same-named characters
+      describeCharacter.test.ts
       CharacterPicker.tsx      # ARIA 1.2 combobox: search, images, paging
       CharacterPicker.graphql.ts
       CharacterPicker.module.css
@@ -179,6 +181,17 @@ appends page 1's rows a second time.
 The form resets the picker by changing its `key` after a successful submit.
 Clearing only the selection would leave the field reading "Rick Sanchez" with
 nothing actually selected.
+
+**Same-named characters are real, not a bug.** The API returns several
+alternate-dimension versions of one person — 46 names are shared by two or more
+of the 826 characters, and Rick, Morty, Summer and Beth Smith have four each.
+`species · status` alone collapses the four Ricks into two labels, so
+`describeCharacter.ts` builds a fuller description from `type` and
+`origin.name`. For the 23 names where even that is not enough (the four SEAL
+Team Ricks are identical down to the episode), `describeCharacters` appends the
+id — and only on the rows that actually clash, judged across the loaded results
+rather than the whole catalogue. Do not "fix" the duplicates by deduplicating;
+they are distinct characters.
 
 **Cards own their character.** A card keeps the `LoadedCharacter` it was created
 with (in a map on `Board`), rather than looking it up in the current search

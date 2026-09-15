@@ -14,5 +14,10 @@ export const CharacterChipFragment = graphql(`
     name
     image
     species
+    status
+    type
+    origin {
+      name
+    }
   }
 `);
