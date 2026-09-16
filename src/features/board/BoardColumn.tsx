@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
@@ -16,6 +17,7 @@ type Props = {
   targeted: boolean;
   /** Only meaningful for Done: a card is arriving from another column. */
   portalOpen: boolean;
+  portalIndex: number | null;
   /** Only meaningful for Done: changes each time the portal should discharge. */
   dischargeKey: number | null;
   arrivingIds: Set<string>;
@@ -33,6 +35,7 @@ export function BoardColumn({
   charactersById,
   targeted,
   portalOpen,
+  portalIndex,
   dischargeKey,
   arrivingIds,
   onArrivalComplete,
@@ -43,6 +46,14 @@ export function BoardColumn({
   // column droppable — with no cards there is nothing else to drop onto.
   // `isOver` is deliberately unused: see useBoardDrag's targetColumn.
   const { setNodeRef } = useDroppable({ id: columnId });
+
+  const portal =
+    columnId === 'done' && portalOpen ? (
+      <li className={styles.portalSlot} aria-hidden="true" data-testid="done-portal-slot">
+        <DonePortal charging={targeted} blastKey={null} />
+      </li>
+    ) : null;
+  const insertion = portalIndex ?? cardIds.length;
 
   const headingId = `column-heading-${columnId}`;
 
@@ -61,18 +72,23 @@ export function BoardColumn({
           className={targeted ? `${styles.list} ${styles.listOver}` : styles.list}
           data-column={columnId}
         >
-          {cardIds.map((cardId) => {
+          {cardIds.map((cardId, index) => {
             const card = cards[cardId];
             if (!card) return null;
             return (
-              <SortableCard
-                key={cardId}
-                card={card}
-                arriving={arrivingIds.has(cardId)}
-                onArrivalComplete={onArrivalComplete}
-                completionKey={completedCardId === cardId ? completionKey : null}
-                character={charactersById.get(card.characterId)}
-              />
+              <Fragment key={cardId}>
+                {index === insertion ? portal : null}
+                <SortableCard
+                  dischargeKey={
+                    columnId === 'done' && completedCardId === cardId ? dischargeKey : null
+                  }
+                  card={card}
+                  arriving={arrivingIds.has(cardId)}
+                  onArrivalComplete={onArrivalComplete}
+                  completionKey={completedCardId === cardId ? completionKey : null}
+                  character={charactersById.get(card.characterId)}
+                />
+              </Fragment>
             );
           })}
 
@@ -82,15 +98,7 @@ export function BoardColumn({
             <li className={styles.empty}>Drop a card here</li>
           ) : null}
 
-          {/* Done opens a portal in the middle of its drop zone while a card
-              is dragged from an unfinished column, and keeps it long enough to discharge. Absolutely
-              positioned and pointer-events: none, so it overlays the cards
-              without affecting layout or the drop itself. */}
-          {columnId === 'done' && (portalOpen || dischargeKey !== null) ? (
-            <li className={styles.portalSlot} aria-hidden="true">
-              <DonePortal charging={targeted || dischargeKey !== null} blastKey={dischargeKey} />
-            </li>
-          ) : null}
+          {insertion === cardIds.length ? portal : null}
         </ul>
       </SortableContext>
     </section>

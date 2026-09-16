@@ -1,8 +1,10 @@
 import {
+  closestCorners,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DndContextProps,
   type DragEndEvent,
   type DragOverEvent,
@@ -28,6 +30,8 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
   // resolution rather than dnd-kit's per-droppable `isOver`, because as soon as
   // a card moves into a column mid-drag the pointer is over that card and the
   // column's own droppable stops reporting isOver.
+  const [doneInsertionIndex, setDoneInsertionIndex] = useState<number | null>(null);
+
   const [targetColumn, setTargetColumn] = useState<ColumnId | null>(null);
 
   // Drives the DragOverlay. The card is still in the board while dragging; this
@@ -66,9 +70,49 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  // Use the actual pointer inside Done, so aiming below a card means after it.
+  // The portal occupies a real gap; card midpoints on either side keep that gap
+  // stable until the pointer deliberately crosses another card.
+  const collisionDetection: CollisionDetection = (args) => {
+    const { pointerCoordinates: pointer, droppableContainers } = args;
+    const done = droppableContainers
+      .find((container) => container.id === 'done')
+      ?.node.current?.getBoundingClientRect();
+    if (
+      dragOrigin !== 'done' &&
+      pointer &&
+      done &&
+      pointer.x >= done.left &&
+      pointer.x <= done.right &&
+      pointer.y >= done.top &&
+      pointer.y <= done.bottom
+    ) {
+      const index = board.columnOrder.done.findIndex((id) => {
+        // dnd-kit's cached rect can lag behind the gap moving without a card
+        // resizing. Read the current layout to keep the advertised slot stable.
+        const rect = droppableContainers
+          .find((container) => container.id === id)
+          ?.node.current?.getBoundingClientRect();
+        return rect && pointer.y < rect.top + rect.height / 2;
+      });
+      return [
+        { id: 'done', data: { insertionIndex: index < 0 ? board.columnOrder.done.length : index } },
+      ];
+    }
+    return closestCorners(args);
+  };
+
+  function getInsertionIndex(event: DragOverEvent, column: ColumnId) {
+    const index: unknown = event.collisions?.[0]?.data?.insertionIndex;
+    return column === 'done' && typeof index === 'number'
+      ? index
+      : insertionIndex(board, column, String(event.over?.id));
+  }
+
   function handleDragStart(event: DragStartEvent) {
     const cardId = String(event.active.id);
     setActiveCardId(cardId);
+    setDoneInsertionIndex(null);
     const column = findColumnOf(board, cardId);
     setDragOrigin(column ?? null);
     dragStartPosition.current = column
@@ -76,19 +120,21 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
       : null;
   }
 
+  function updateDropPreview(event: DragOverEvent) {
+    const to = event.over ? resolveDropColumn(board, String(event.over.id)) : undefined;
+    setTargetColumn(to ?? null);
+    setDoneInsertionIndex(to === 'done' ? getInsertionIndex(event, to) : null);
+  }
+
   function handleDragOver(event: DragOverEvent) {
+    updateDropPreview(event);
     const { active, over } = event;
-    if (!over) {
-      setTargetColumn(null);
-      return;
-    }
+    if (!over) return;
 
     const cardId = String(active.id);
     const overId = String(over.id);
     const from = findColumnOf(board, cardId);
     const to = resolveDropColumn(board, overId);
-
-    setTargetColumn(to ?? null);
 
     // Cross-column moves are applied mid-drag so the card visibly enters the
     // new column and the other cards make room. Reordering inside one column is
@@ -104,7 +150,7 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
       type: 'card/moved',
       cardId,
       toColumn: to,
-      toIndex: insertionIndex(board, to, overId),
+      toIndex: getInsertionIndex(event, to),
     });
   }
 
@@ -133,7 +179,7 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
       type: 'card/moved',
       cardId,
       toColumn: to,
-      toIndex: insertionIndex(board, to, overId),
+      toIndex: getInsertionIndex(event, to),
     });
 
     // Matches how arrivals are handled: the effect is not created at all under
@@ -197,12 +243,15 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
 
   return {
     activeCard,
+    collisionDetection,
+    doneInsertionIndex,
     targetColumn,
     portalOpen,
     sensors,
     accessibility,
     onDragStart: handleDragStart,
     onDragOver: handleDragOver,
+    onDragMove: updateDropPreview,
     onDragEnd: handleDragEnd,
     onDragCancel: handleDragCancel,
   };

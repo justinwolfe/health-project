@@ -22,7 +22,7 @@ type Props = {
 };
 
 /**
- * The portal that opens in the middle of the Done column while a card is
+ * The portal that opens at the insertion point in Done while a card is
  * dragged from an unfinished column, and discharges when one lands.
  *
  * It is mounted only for that window — the column owns the decision — so this
@@ -36,7 +36,11 @@ export function DonePortal({ charging, blastKey }: Props) {
     // Two elements on purpose: the outer one plays the entrance once, the inner
     // one carries the idle/charging state. Putting both on one element would
     // have the entrance animation's filled final values override the state.
-    <div className={styles.root} aria-hidden="true" data-testid="done-portal">
+    <div
+      className={blastKey === null ? styles.root : `${styles.root} ${styles.discharging}`}
+      aria-hidden="true"
+      data-testid="done-portal"
+    >
       <div
         className={charging ? `${styles.portal} ${styles.charging}` : styles.portal}
         data-charging={charging}

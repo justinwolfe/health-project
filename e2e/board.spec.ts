@@ -305,3 +305,114 @@ test('does not mount the drag portal under reduced motion', async ({ page }) => 
   await expect(page.getByTestId('done-portal')).toHaveCount(0);
   await page.mouse.up();
 });
+
+for (const destination of ['above', 'between', 'below'] as const) {
+  test(`Done portal reserves the ${destination} insertion point and drops there`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await addCard(page, 'Existing A', 'Rick Sanchez');
+    await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+    await addCard(page, 'Existing B', 'Morty Smith');
+    await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+    await addCard(page, 'Incoming', 'Birdperson');
+    const original = await cardTitles(page, 'done').allTextContents();
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'doing'), {
+      hold: true,
+    });
+
+    const done = column(page, 'done');
+    const slot = done.getByTestId('done-portal-slot');
+    const cards = done.getByTestId('card');
+    const last = await cards.last().boundingBox();
+    const initialSlot = await slot.boundingBox();
+    if (!last || !initialSlot) throw new Error('Missing Done geometry');
+    expect(initialSlot.y).toBeGreaterThanOrEqual(last.y + last.height);
+
+    const target =
+      destination === 'below'
+        ? initialSlot
+        : await cards.nth(destination === 'above' ? 0 : 1).boundingBox();
+    if (!target) throw new Error('Missing target');
+    await page.mouse.move(target.x + target.width / 2, target.y + 4, { steps: 10 });
+    if (destination === 'below') {
+      // Crossing into Done can open an earlier gap along the diagonal path.
+      // Aim below the last card in its current layout, just as the user sees it.
+      const bottomCard = await cards.last().boundingBox();
+      if (!bottomCard) throw new Error('Missing last card');
+      await page.mouse.move(
+        bottomCard.x + bottomCard.width / 2,
+        bottomCard.y + bottomCard.height + 4,
+      );
+    }
+    const index = destination === 'above' ? 0 : destination === 'between' ? 1 : 2;
+    await expect
+      .poll(() => slot.evaluate((el) => Array.from(el.parentElement!.children).indexOf(el)))
+      .toBe(index);
+    // The portal's reserved space must stay separate from all existing cards,
+    // including after dnd-kit has remeasured the shifted list.
+    await expect
+      .poll(async () => {
+        const gap = await slot.boundingBox();
+        const boxes = await cards.evaluateAll((els) =>
+          els.map((el) => {
+            const r = el.getBoundingClientRect();
+            return { top: r.top, bottom: r.bottom };
+          }),
+        );
+        return !!gap && boxes.every((r) => r.bottom <= gap.y || r.top >= gap.y + gap.height);
+      })
+      .toBe(true);
+    const gap = await slot.boundingBox();
+    if (!gap) throw new Error('Missing portal gap');
+    await page.mouse.move(gap.x + gap.width / 2, gap.y + gap.height / 2);
+    await expect
+      .poll(() => slot.evaluate((el) => Array.from(el.parentElement!.children).indexOf(el)))
+      .toBe(index);
+    if (destination === 'between') {
+      await page.screenshot({ path: 'test-results/done-portal-between.png' });
+    }
+    await page.mouse.up();
+    const expected = [...original];
+    expected.splice(index, 0, 'Incoming');
+    await expect(cardTitles(page, 'done')).toHaveText(expected);
+    await expect(cards.filter({ hasText: 'Incoming' }).getByTestId('portal-blast')).toBeAttached();
+  });
+}
+
+test('hands completion straight to the card and settles its spacing without a jump', async ({
+  page,
+}) => {
+  await addCard(page, 'Smooth completion', 'Rick Sanchez');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'done'));
+  const done = column(page, 'done');
+  await expect(done.getByTestId('portal-blast')).toBeAttached();
+  await expect(page.getByTestId('drag-overlay')).toHaveCount(0);
+  // The discharge must take over at full size, without replaying portalOpen.
+  expect(
+    await done.getByTestId('done-portal').evaluate((el) => getComputedStyle(el).animationName),
+  ).toBe('none');
+
+  const spacing = await done.getByTestId('card').evaluate(
+    (el) =>
+      new Promise<number[]>((resolve) => {
+        const samples: number[] = [];
+        const started = performance.now();
+        function sample(now: number) {
+          samples.push(parseFloat(getComputedStyle(el).paddingTop));
+          if (now - started < 2000) requestAnimationFrame(sample);
+          else resolve(samples);
+        }
+        requestAnimationFrame(sample);
+      }),
+  );
+  expect(spacing[0]).toBeGreaterThan(0);
+  expect(spacing.at(-1)).toBe(0);
+  // A gradual settle has intermediate positions; timer-driven removal goes
+  // straight from the reserved space to zero in a single frame.
+  expect(spacing.filter((value) => value > 0 && value < spacing[0]!).length).toBeGreaterThan(5);
+  expect(
+    Math.max(...spacing.slice(1).map((value, i) => Math.abs(value - spacing[i]!))),
+  ).toBeLessThan(spacing[0]! / 2);
+});

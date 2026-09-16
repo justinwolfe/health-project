@@ -50,3 +50,36 @@
     animation: none;
   }
 }
+
+.celebrating {
+  position: relative;
+  isolation: isolate;
+  /* Keep room through the burst, then settle before completion unmounts.
+     Tying this to the shorter portal timer made the card jump up at 1000ms. */
+  animation: settleCompletion 1900ms both;
+}
+
+@keyframes settleCompletion {
+  0%,
+  65% {
+    padding-block: 1.5rem;
+  }
+  100% {
+    padding-block: 0;
+  }
+}
+
+.portal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebrating {
+    animation: none;
+  }
+}

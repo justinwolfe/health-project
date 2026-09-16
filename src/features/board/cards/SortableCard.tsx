@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useCallback } from 'react';
 
 import type { LoadedCharacter } from '../../characters/types';
+import { DonePortal } from '../effects/DonePortal';
 import { CardArrival } from '../effects/CardArrival';
 import { MeeseeksPoof } from '../effects/MeeseeksPoof';
 import type { Card } from '../state/types';
@@ -19,6 +20,7 @@ type Props = {
    * animation replays: re-adding the class alone would not restart it.
    */
   completionKey: number | null;
+  dischargeKey: number | null;
   character: LoadedCharacter | undefined;
 };
 
@@ -28,6 +30,7 @@ export function SortableCard({
   arriving,
   onArrivalComplete,
   completionKey,
+  dischargeKey,
 }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -47,13 +50,24 @@ export function SortableCard({
     <li
       ref={setNodeRef}
       style={style}
-      className={isDragging ? `${styles.item} ${styles.placeholder}` : styles.item}
+      className={[
+        styles.item,
+        isDragging && styles.placeholder,
+        completionKey !== null && styles.celebrating,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       data-testid="card"
       // The whole card is the drag handle. `attributes` also supplies the
       // roving tabindex and ARIA wiring that make the keyboard sensor usable.
       {...attributes}
       {...listeners}
     >
+      {dischargeKey !== null ? (
+        <div className={styles.portal}>
+          <DonePortal charging blastKey={dischargeKey} />
+        </div>
+      ) : null}
       {arriving ? (
         <CardArrival onComplete={finishArrival}>
           <CardView card={card} character={character} />

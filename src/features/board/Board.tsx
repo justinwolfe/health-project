@@ -1,4 +1,4 @@
-import { DndContext, DragOverlay, MeasuringStrategy, closestCorners } from '@dnd-kit/core';
+import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
 import { useCallback, useReducer, useState } from 'react';
 
 import type { LoadedCharacter } from '../characters/types';
@@ -50,10 +50,8 @@ export function Board() {
 
       <DndContext
         sensors={drag.sensors}
-        // closestCorners suits column layouts better than the default
-        // closestCenter: it stays accurate when a tall card is dragged over a
-        // short one near a column edge.
-        collisionDetection={closestCorners}
+        collisionDetection={drag.collisionDetection}
+        onDragMove={drag.onDragMove}
         onDragStart={drag.onDragStart}
         onDragOver={drag.onDragOver}
         onDragEnd={drag.onDragEnd}
@@ -77,6 +75,7 @@ export function Board() {
               onArrivalComplete={finishArrival}
               targeted={drag.targetColumn === columnId}
               portalOpen={drag.portalOpen}
+              portalIndex={drag.doneInsertionIndex}
               dischargeKey={discharge}
               completedCardId={completion?.cardId ?? null}
               completionKey={completion?.key ?? null}
@@ -84,7 +83,9 @@ export function Board() {
           ))}
         </div>
 
-        <DragOverlay>
+        {/* Completion already animates the real card. A second drop animation on
+            the overlay obscures its first quarter-second. */}
+        <DragOverlay dropAnimation={completion !== null ? null : undefined}>
           {drag.activeCard ? (
             <div data-testid="drag-overlay">
               <CardView

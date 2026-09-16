@@ -64,7 +64,6 @@
   flex: 1;
   border-radius: var(--radius-md);
   border: 1px dashed transparent;
-  /* Anchors the Done portal, which centres itself over the drop zone. */
   position: relative;
   transition:
     background-color 120ms ease,
@@ -86,13 +85,10 @@
 }
 
 .portalSlot {
-  position: absolute;
-  inset: 0;
   display: grid;
   place-items: center;
+  flex: none;
+  min-height: 8rem;
   list-style: none;
-  /* Above any cards already sitting in the column. */
-  z-index: 3;
-  /* Never intercepts the drop it is advertising. */
   pointer-events: none;
 }
