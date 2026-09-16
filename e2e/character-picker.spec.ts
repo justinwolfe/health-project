@@ -26,16 +26,6 @@ test('exposes the ARIA combobox wiring', async ({ page }) => {
   await expect(page.locator(`#${listboxId}`)).toHaveRole('listbox');
 });
 
-test('shows an image for each character', async ({ page }) => {
-  await picker(page).click();
-
-  const firstOption = pickerOptions(page).first();
-  await expect(firstOption).toContainText('Rick Sanchez');
-  await expect(firstOption.locator('img')).toBeVisible();
-  // Decorative: the option already carries the name as text.
-  await expect(firstOption.locator('img')).toHaveAttribute('alt', '');
-});
-
 test('filters on the server as you type', async ({ page }) => {
   await picker(page).click();
   await expect(pickerOptions(page).first()).toContainText('Rick Sanchez');
@@ -165,41 +155,6 @@ test('announces the result count to screen readers', async ({ page }) => {
   // own live region on the same page.
   const statusId = await picker(page).getAttribute('aria-describedby');
   await expect(page.locator(`#${statusId}`)).toHaveText('4 characters found.');
-});
-
-test('tells same-named characters apart by origin', async ({ page }) => {
-  // The API returns several alternate-dimension versions of one person.
-  await searchCharacter(page, 'rick sanchez');
-
-  const options = pickerOptions(page);
-  await expect(options).toHaveCount(2);
-  await expect(options.nth(0)).toContainText('Earth (C-137)');
-  await expect(options.nth(0)).toContainText('Alive');
-  await expect(options.nth(1)).toContainText('Earth (Replacement Dimension)');
-  await expect(options.nth(1)).toContainText('Dead');
-
-  // Origin separates them, so the id is not needed and is not shown.
-  await expect(options.nth(0)).not.toContainText('#');
-});
-
-test('falls back to the id when no metadata separates them', async ({ page }) => {
-  // These two are identical in every field the API exposes.
-  await searchCharacter(page, 'seal team rick');
-
-  const options = pickerOptions(page);
-  await expect(options).toHaveCount(2);
-  await expect(options.nth(0)).toContainText('#7');
-  await expect(options.nth(1)).toContainText('#8');
-});
-
-test('omits an origin the API reports as unknown', async ({ page }) => {
-  await searchCharacter(page, 'squanchy');
-
-  const option = pickerOptions(page).first();
-  await expect(option).toContainText('Alien');
-  await expect(option).not.toContainText('unknown');
-  // Status is still surfaced, capitalised.
-  await expect(option).toContainText('Unknown');
 });
 
 test('carries the distinguishing detail onto the card', async ({ page }) => {

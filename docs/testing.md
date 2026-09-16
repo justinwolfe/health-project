@@ -25,7 +25,9 @@ fresh server and uses one worker. Install the browser with
 
 The browser suites cover creation and validation, pointer and keyboard dragging,
 sorting, cancellation, animation cleanup, reduced motion, and picker search,
-paging, selection, duplicate labels, and ARIA wiring.
+paging, selection, character-detail integration, and ARIA behavior. Pure label
+formatting and disambiguation rules stay in fast unit tests rather than being
+repeated in the browser suite.
 
 `e2e/support/app.ts` provides locators, drag helpers, and an API interceptor.
 `e2e/support/characters.ts` supplies 25 characters and emulates name filtering

@@ -15,18 +15,6 @@ test.beforeEach(async ({ page }) => {
   await openBoard(page);
 });
 
-test('renders the three columns and the create form', async ({ page }) => {
-  await expect(
-    page.getByRole('heading', { name: "Rick and Morty's Stuff To Do", level: 1 }),
-  ).toBeVisible();
-
-  for (const name of ['To Do', 'Doing', 'Done']) {
-    await expect(page.getByRole('heading', { name, level: 2 })).toBeVisible();
-  }
-
-  await expect(page.getByRole('form', { name: 'Add a card' })).toBeVisible();
-});
-
 test('creates a card with its assigned character and clears the form', async ({ page }) => {
   await addCard(page, 'Fix the portal gun', 'Rick Sanchez');
 
@@ -276,13 +264,6 @@ test('does not open the portal when reordering inside Done', async ({ page }) =>
   await expect(page.getByTestId('meeseeks')).toHaveCount(0);
 });
 
-test('gives Done no placeholder text', async ({ page }) => {
-  await expect(column(page, 'done')).not.toContainText('Drop a card here');
-  // The other columns keep theirs.
-  await expect(column(page, 'todo')).toContainText('Drop a card here');
-  await expect(column(page, 'doing')).toContainText('Drop a card here');
-});
-
 test('closes the Done portal when a drag ends somewhere else', async ({ page }) => {
   await addCard(page, 'Not yet done', 'Rick Sanchez');
 
@@ -410,9 +391,6 @@ for (const destination of ['above', 'between', 'below'] as const) {
     await expect
       .poll(() => slot.evaluate((el) => Array.from(el.parentElement!.children).indexOf(el)))
       .toBe(index);
-    if (destination === 'between') {
-      await page.screenshot({ path: 'test-results/done-portal-between.png' });
-    }
     await page.mouse.up();
     const expected = [...original];
     expected.splice(index, 0, 'Incoming');

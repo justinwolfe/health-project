@@ -28,7 +28,7 @@ describe('boardReducer', () => {
     expect(emptyBoard.cards).toEqual({});
   });
 
-  it('delegates moves to moveCard', () => {
+  it('moves an existing card between columns', () => {
     const state: BoardState = {
       cards: { a: { id: 'a', title: 'A', details: '', characterId: '1' } },
       columnOrder: { todo: ['a'], doing: [], done: [] },
