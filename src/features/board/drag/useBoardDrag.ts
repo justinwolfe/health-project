@@ -106,9 +106,9 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
 
   function getInsertionIndex(event: DragOverEvent, column: ColumnId) {
     const index: unknown = event.collisions?.[0]?.data?.insertionIndex;
-    return column === 'done' && typeof index === 'number'
-      ? index
-      : insertionIndex(board, column, String(event.over?.id));
+    // Done's collision detection has already chosen the slot.
+    if (column === 'done' && typeof index === 'number') return index;
+    return insertionIndex(board, column, String(event.over?.id));
   }
 
   function handleDragStart(event: DragStartEvent) {

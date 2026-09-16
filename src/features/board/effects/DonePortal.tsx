@@ -47,11 +47,11 @@ export function DonePortal({ charging, blastKey }: Props) {
       >
         {/* Rendered before the vortex so it lights the portal from behind rather
           than washing it out. Keyed like the burst so it replays with it. */}
-        {blastKey === null ? null : <span key={`glow-${blastKey}`} className={styles.glow} />}
+        {blastKey !== null ? <span key={`glow-${blastKey}`} className={styles.glow} /> : null}
 
         <PortalVortex />
 
-        {blastKey === null ? null : (
+        {blastKey !== null ? (
           <span key={blastKey} className={styles.blast} data-testid="portal-blast">
             <span className={styles.afterglow} />
             <span className={styles.ring} />
@@ -69,7 +69,7 @@ export function DonePortal({ charging, blastKey }: Props) {
               />
             ))}
           </span>
-        )}
+        ) : null}
       </div>
     </div>
   );

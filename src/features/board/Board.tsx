@@ -100,7 +100,8 @@ export function Board({ header }: Props) {
         </div>
 
         {/* Completion already animates the real card. A second drop animation on
-            the overlay obscures its first quarter-second. */}
+            the overlay obscures its first quarter-second. `null` turns dnd-kit's
+            drop animation off; `undefined` keeps its default. */}
         <DragOverlay dropAnimation={completion !== null ? null : undefined}>
           {drag.activeCard ? (
             <div data-testid="drag-overlay">

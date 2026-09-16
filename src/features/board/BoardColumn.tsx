@@ -75,17 +75,16 @@ export function BoardColumn({
           {cardIds.map((cardId, index) => {
             const card = cards[cardId];
             if (!card) return null;
+            const isCompleted = completedCardId === cardId;
             return (
               <Fragment key={cardId}>
                 {index === insertion ? portal : null}
                 <SortableCard
-                  dischargeKey={
-                    columnId === 'done' && completedCardId === cardId ? dischargeKey : null
-                  }
+                  dischargeKey={columnId === 'done' && isCompleted ? dischargeKey : null}
                   card={card}
                   arriving={arrivingIds.has(cardId)}
                   onArrivalComplete={onArrivalComplete}
-                  completionKey={completedCardId === cardId ? completionKey : null}
+                  completionKey={isCompleted ? completionKey : null}
                   character={charactersById.get(card.characterId)}
                 />
               </Fragment>

@@ -94,7 +94,7 @@ export function CharacterPicker({
           setActiveIndex(0);
           return;
         }
-        setActiveIndex(activeIndex >= lastIndex ? lastIndex : activeIndex + 1);
+        setActiveIndex(Math.min(activeIndex + 1, lastIndex));
         return;
 
       case 'ArrowUp':
@@ -104,7 +104,7 @@ export function CharacterPicker({
           setActiveIndex(lastIndex);
           return;
         }
-        setActiveIndex(activeIndex <= 0 ? 0 : activeIndex - 1);
+        setActiveIndex(Math.max(activeIndex - 1, 0));
         return;
 
       case 'Home':
@@ -218,7 +218,8 @@ export function CharacterPicker({
           aria-describedby={[statusId, describedBy, error ? errorId : null]
             .filter(Boolean)
             .join(' ')}
-          {...(activeId ? { 'aria-activedescendant': activeId } : {})}
+          // React omits the attribute while no option is highlighted.
+          aria-activedescendant={activeId}
         />
       </div>
 

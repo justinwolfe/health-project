@@ -77,10 +77,10 @@ export function SortableCard({
         // pass-through; 'rest' is the steady state, which animates nothing.
         <div
           key={completionKey ?? 'rest'}
-          className={completionKey === null ? undefined : styles.completed}
+          className={completionKey !== null ? styles.completed : undefined}
         >
           <CardView card={card} character={character} />
-          {completionKey === null ? null : <MeeseeksPoof />}
+          {completionKey !== null ? <MeeseeksPoof /> : null}
         </div>
       )}
     </li>

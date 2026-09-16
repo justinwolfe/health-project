@@ -55,20 +55,22 @@ export type IdentifiedCharacter = CharacterDescription & {
 export function describeCharacters(
   characters: readonly IdentifiableCharacter[],
 ): IdentifiedCharacter[] {
-  const descriptions = characters.map(describeCharacter);
-  const labels = characters.map(
-    (character, index) =>
-      `${character.name ?? ''}|${descriptions[index]?.detail ?? ''}|${descriptions[index]?.status ?? ''}`,
-  );
+  const described = characters.map((character) => {
+    const description = describeCharacter(character);
+    return {
+      id: character.id,
+      description,
+      label: `${character.name ?? ''}|${description.detail}|${description.status}`,
+    };
+  });
 
   const counts = new Map<string, number>();
-  for (const label of labels) {
+  for (const { label } of described) {
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
 
-  return characters.map((character, index) => ({
-    detail: descriptions[index]?.detail ?? '',
-    status: descriptions[index]?.status ?? 'Unknown',
-    disambiguator: (counts.get(labels[index] ?? '') ?? 0) > 1 ? `#${character.id}` : null,
-  }));
+  return described.map(({ id, description, label }) => {
+    const isAmbiguous = (counts.get(label) ?? 0) > 1;
+    return { ...description, disambiguator: isAmbiguous ? `#${id}` : null };
+  });
 }
