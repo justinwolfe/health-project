@@ -2,11 +2,11 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   schema: 'https://rickandmortyapi.com/graphql',
-  documents: ['src/**/*.{ts,tsx}', '!src/gql/**/*'],
+  documents: ['src/**/*.{ts,tsx}', '!src/graphql/generated/**/*'],
   // Lets codegen run before any operations exist, and while one is mid-edit.
   ignoreNoDocuments: true,
   generates: {
-    './src/gql/': {
+    './src/graphql/generated/': {
       preset: 'client',
       presetConfig: {
         // Fragment masking on: a component that declares a fragment can only

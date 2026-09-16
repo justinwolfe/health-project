@@ -3,9 +3,9 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 import type { LoadedCharacter } from '../characters/types';
 import styles from './BoardColumn.module.css';
-import { DonePortal } from './DonePortal';
-import { SortableCard } from './SortableCard';
-import { COLUMN_TITLES, type Card, type ColumnId } from './types';
+import { SortableCard } from './cards/SortableCard';
+import { DonePortal } from './effects/DonePortal';
+import { COLUMN_TITLES, type Card, type ColumnId } from './state/types';
 
 type Props = {
   columnId: ColumnId;
@@ -41,7 +41,7 @@ export function BoardColumn({
 }: Props) {
   // Registers the column itself as a drop target, which is what makes an empty
   // column droppable — with no cards there is nothing else to drop onto.
-  // `isOver` is deliberately unused: see the note on Board's targetColumn.
+  // `isOver` is deliberately unused: see useBoardDrag's targetColumn.
   const { setNodeRef } = useDroppable({ id: columnId });
 
   const headingId = `column-heading-${columnId}`;
@@ -83,7 +83,7 @@ export function BoardColumn({
           ) : null}
 
           {/* Done opens a portal in the middle of its drop zone while a card
-              is over it, and keeps it just long enough to discharge. Absolutely
+              is dragged from an unfinished column, and keeps it long enough to discharge. Absolutely
               positioned and pointer-events: none, so it overlays the cards
               without affecting layout or the drop itself. */}
           {columnId === 'done' && (portalOpen || dischargeKey !== null) ? (

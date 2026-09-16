@@ -1,6 +1,6 @@
 dist
 node_modules
-src/gql
+src/graphql/generated
 playwright-report
 test-results
 package-lock.json

@@ -23,12 +23,12 @@ type Props = {
 
 /**
  * The portal that opens in the middle of the Done column while a card is
- * dragged over it, and discharges when one lands.
+ * dragged from an unfinished column, and discharges when one lands.
  *
  * It is mounted only for that window — the column owns the decision — so this
  * component has no idle state and animates itself open as it appears.
  *
- * Decorative throughout: the column heading and its empty-state text carry the
+ * Decorative throughout: the column heading, count, and drag announcements carry the
  * meaning for assistive technology, so the whole thing is aria-hidden.
  */
 export function DonePortal({ charging, blastKey }: Props) {

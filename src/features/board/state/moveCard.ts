@@ -1,8 +1,8 @@
-import type { BoardState, ColumnId } from './types';
+import { COLUMN_IDS, type BoardState, type ColumnId } from './types';
 
 /** The column a card currently sits in, or undefined if the id is unknown. */
 export function findColumnOf(state: BoardState, cardId: string): ColumnId | undefined {
-  for (const columnId of Object.keys(state.columnOrder) as ColumnId[]) {
+  for (const columnId of COLUMN_IDS) {
     if (state.columnOrder[columnId].includes(cardId)) return columnId;
   }
   return undefined;

@@ -1,5 +1,5 @@
-import { findColumnOf } from './moveCard';
-import { isColumnId, type BoardState, type ColumnId } from './types';
+import { findColumnOf } from '../state/moveCard';
+import { isColumnId, type BoardState, type ColumnId } from '../state/types';
 
 /**
  * dnd-kit reports what the pointer is over as a single id, which is either a

@@ -3,12 +3,12 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { useCallback } from 'react';
 
-import { CardArrival } from './CardArrival';
-import type { LoadedCharacter } from '../characters/types';
+import type { LoadedCharacter } from '../../characters/types';
+import { CardArrival } from '../effects/CardArrival';
+import { MeeseeksPoof } from '../effects/MeeseeksPoof';
+import type { Card } from '../state/types';
 import { CardView } from './CardView';
-import { MeeseeksPoof } from './MeeseeksPoof';
 import styles from './SortableCard.module.css';
-import type { Card } from './types';
 
 type Props = {
   card: Card;

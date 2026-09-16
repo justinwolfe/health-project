@@ -1,4 +1,4 @@
-import { graphql } from '../gql';
+import { graphql } from '../generated';
 
 /**
  * The fragment spreads are resolved by codegen, which scans every file in

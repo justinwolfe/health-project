@@ -1,107 +1,98 @@
 # Kanban Board
 
-A frontend-only Kanban board — **To Do / Doing / Done** — where every card is
-assigned a Rick and Morty character. Cards drag between columns and reorder
-within a column.
+A frontend-only board with **To Do**, **Doing**, and **Done** columns. Create a
+card, assign a Rick and Morty character, then drag it between columns or reorder
+it with a mouse or keyboard.
 
-A new card materialises into To Do through a procedurally drawn portal. Start
-dragging any unfinished card and a portal opens in the middle of Done, charging
-as the drop comes within reach and discharging with a shockwave and sparks as
-the card lands — then a Mr. Meeseeks pops up on the finished card, beams, and
-poofs out of existence, which in the show is the entire reason a Meeseeks
-exists. Reordering within Done is left alone.
+New cards arrive through an animated portal. Finishing a card triggers a portal
+burst and a brief Mr. Meeseeks celebration. Reduced-motion preferences skip
+these effects. Cards live in memory and reset when the page reloads.
 
-No confetti and no animation dependency: everything is hand-drawn SVG and CSS
-keyframes, and every effect is skipped entirely under `prefers-reduced-motion`.
+## Get started
 
-## Running it
-
-Requires Node 22+ (`.nvmrc` is provided).
+Requires Node.js 22+; `.nvmrc` is included.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Then open http://localhost:5173.
+Open [localhost:5173](http://localhost:5173). Character search uses the public
+Rick and Morty GraphQL API and requires internet access. No credentials or
+backend setup are needed.
+
+## Commands
+
+| Command               | Purpose                                            |
+| --------------------- | -------------------------------------------------- |
+| `npm run dev`         | Start the Vite development server                  |
+| `npm run build`       | Typecheck and create a production build in `dist/` |
+| `npm run preview`     | Serve the production build locally                 |
+| `npm run verify`      | Check formatting, lint, types, and unit tests      |
+| `npm run test:e2e`    | Run Chromium browser tests; starts the dev server  |
+| `npm run test:e2e:ui` | Open Playwright's interactive test runner          |
+| `npm run format`      | Apply Prettier formatting                          |
+| `npm run codegen`     | Regenerate GraphQL types from the live API schema  |
+
+Before the first browser test run, install Chromium:
 
 ```bash
-npm run verify        # format check + lint + typecheck + unit tests
-npm run test:e2e      # Playwright (starts the dev server itself)
+npx playwright install chromium
 ```
 
-First e2e run only: `npx playwright install chromium`.
+For a full local check:
 
-## Stack
-
-- **React 19** with the **React Compiler** enabled — components are
-  auto-memoized, so drag handlers stay free of `useCallback`/`useMemo` noise.
-- **TypeScript** in `strict` mode, plus `noUncheckedIndexedAccess`.
-- **Vite 8** for bundling and dev.
-- **urql** with **graphql-codegen**'s `client` preset for the Rick and Morty
-  GraphQL API. Components declare the fields they need as fragments; fragment
-  masking means a component can only read what it declared.
-- **dnd-kit** for drag and drop, including keyboard-driven dragging.
-- **CSS Modules** with design tokens in one stylesheet; the portal effects are
-  hand-drawn SVG plus keyframes, with no animation library.
-- **Vitest** for pure logic, **Playwright** for anything involving the DOM.
-
-## How it is organised
-
-State is normalized: cards live in one map keyed by id, and each column holds an
-ordered array of ids. Every drag — reordering inside a column and moving across
-columns alike — resolves to a single pure function, `moveCard()`, which is unit
-tested independently of React and of dnd-kit. The dnd-kit callbacks in
-`Board.tsx` do nothing but translate a drop into a column and an index and
-dispatch it.
-
-The character field is a hand-written ARIA 1.2 combobox: type to search, arrow
-keys to browse, images and species on every row. Search runs on the server
-(`filter: { name: ... }`, debounced), so all 826 characters are reachable
-without downloading them, and a `role="option"` "load more" row pages through
-the list when browsing without a query. DOM focus stays in the input throughout
-and the highlighted option is conveyed with `aria-activedescendant`.
-
-A card keeps the character it was created with, rather than looking it up in
-whatever the picker currently has loaded.
-
-**On duplicate names.** The API returns four Rick Sanchezes — alternate-dimension
-versions of the same person, which is the show's premise rather than bad data.
-46 of the 826 characters' names are shared this way. Each row therefore shows
-species, sub-type and home dimension alongside the status, which separates most
-of them; where even that is identical (four SEAL Team Ricks match down to the
-episode) the id is appended, but only on the rows that actually clash.
-
+```bash
+npm run verify
+npm run build
+npm run test:e2e
 ```
+
+## Using the board
+
+- Enter a title and choose a character from the search results. A typed name
+  alone does not select a character.
+- In the character field, use arrow keys to browse, Enter to select, and Escape
+  to close. The final “Load more” option fetches another page.
+- Drag a card to move it. With a focused card, press Space or Enter to pick it
+  up, use arrow keys to move, and press Space or Enter to drop. Escape restores
+  its original position.
+
+## Project map
+
+```text
 src/
-  graphql/       urql client + queries
+  App.tsx          Application shell
   features/
-    board/       board state, columns, cards, the moveCard transition
-    characters/  character data and presentation
-  styles/        design tokens and global styles
-  gql/           generated by graphql-codegen (committed; do not hand-edit)
-e2e/             Playwright specs
+    board/         Board, columns, and create form
+      cards/       Card presentation and sortable wrapper
+      drag/        Drag lifecycle hook and drop-target helpers
+      effects/     Portals, Meeseeks, and completion timers
+      state/       Types, reducer, movement logic, and tests
+    characters/    Shared character types and description helpers
+      picker/      Search combobox, fragment, styles, and search hook
+      chip/        Compact character label, fragment, and styles
+  graphql/
+    client.ts      urql client configuration
+    queries/       Handwritten query documents
+    generated/     Generated documents, types, and fragment helpers (committed)
+  hooks/           Shared React hooks
+  styles/          Design tokens and global styles
+e2e/              Browser tests and deterministic API fixtures
+docs/             Architecture and testing notes
 ```
 
-## Testing
+## Design and maintenance
 
-Unit tests run in a **node** environment with no jsdom and cover pure logic
-only. Drag and drop is verified in Playwright instead: jsdom has no layout
-engine, so it cannot produce the pointer events dnd-kit's sensors depend on —
-a passing jsdom "drag" test would not mean the feature works.
+React 19 and TypeScript provide the UI and types; Vite builds the app. The React
+Compiler runs through Babel. urql and GraphQL Code Generator provide typed
+queries and fragment masking. dnd-kit provides pointer and keyboard dragging.
+CSS Modules scope styles; SVG and CSS implement the effects.
 
-The Playwright suite stubs the GraphQL endpoint with a 25-character fixture and
-emulates the real query semantics (name matching, 20 per page), so it makes no
-network requests and does not depend on a third-party API staying up. It covers
-creating cards, both validation rules, dragging between columns, reordering
-within one, moving a card with the keyboard alone, and the celebration —
-including that it stays silent under `prefers-reduced-motion` — plus the
-picker's search, paging, keyboard selection and ARIA wiring.
+The board uses one reducer with normalized card data. There is no state library,
+persistence, routing, or component library. Persistence is intentionally left
+available as a follow-up exercise.
 
-After editing any GraphQL query or fragment, run `npm run codegen`.
-
-## Things deliberately left out
-
-No state library (one reducer is enough at this size), no persistence, no
-routing, and no component library. Notes on these and other choices are in
-[CLAUDE.md](CLAUDE.md).
+- [Architecture](docs/architecture.md): state flow, drag behavior, search, and effects.
+- [Testing](docs/testing.md): coverage, fixtures, and checks to run for each change.
+- [Contributor guidance](CLAUDE.md): conventions for maintaining the project.

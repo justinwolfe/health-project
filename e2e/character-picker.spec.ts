@@ -180,3 +180,17 @@ test('carries the distinguishing detail onto the card', async ({ page }) => {
   await expect(card).toContainText('Rick Sanchez');
   await expect(card).toContainText('Earth (Replacement Dimension)');
 });
+
+test('does not point virtual focus at a missing result', async ({ page }) => {
+  await searchCharacter(page, 'zzzznotreal');
+  for (const key of ['ArrowDown', 'ArrowUp', 'Home', 'End']) {
+    await picker(page).press(key);
+    await expect(picker(page)).not.toHaveAttribute('aria-activedescendant', /.+/);
+  }
+});
+
+test('closes when focus moves outside the picker', async ({ page }) => {
+  await picker(page).click();
+  await page.getByLabel('Title').focus();
+  await expect(picker(page)).toHaveAttribute('aria-expanded', 'false');
+});

@@ -1,4 +1,4 @@
-import { graphql } from '../../gql';
+import { graphql } from '../../../graphql/generated';
 
 /**
  * What one row of the picker's listbox shows.

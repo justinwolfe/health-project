@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 
-import { getFragmentData } from '../../gql';
+import { getFragmentData } from '../../../graphql/generated';
 import { CharacterPickerOptionFragment } from './CharacterPicker.graphql';
 import styles from './CharacterPicker.module.css';
-import { describeCharacters } from './describeCharacter';
-import type { LoadedCharacter } from './types';
+import { describeCharacters } from '../describeCharacter';
+import type { LoadedCharacter } from '../types';
 import { useCharacterSearch } from './useCharacterSearch';
 
 type Props = {
@@ -51,10 +51,12 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
   const lastIndex = hasMore ? options.length : options.length - 1;
 
   const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const activeId = open && activeIndex >= 0 ? optionId(activeIndex) : undefined;
+  const activeId =
+    open && activeIndex >= 0 && activeIndex <= lastIndex ? optionId(activeIndex) : undefined;
 
   function select(index: number) {
     if (index === loadMoreIndex) {
+      if (fetching || pending) return;
       // Keep the list open and land on the first row about to arrive.
       setActiveIndex(options.length);
       loadMore();
@@ -163,7 +165,16 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
   const selected = value ? getFragmentData(CharacterPickerOptionFragment, value) : null;
 
   return (
-    <div className={styles.root} ref={rootRef}>
+    <div
+      className={styles.root}
+      ref={rootRef}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+          setActiveIndex(-1);
+        }
+      }}
+    >
       <div className={styles.field}>
         {selected?.image ? (
           <img
@@ -189,6 +200,7 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
           aria-expanded={open}
           aria-controls={listboxId}
           aria-autocomplete="list"
+          aria-required="true"
           aria-describedby={statusId}
           {...(activeId ? { 'aria-activedescendant': activeId } : {})}
         />

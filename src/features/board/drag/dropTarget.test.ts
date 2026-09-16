@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { BoardState } from '../state/types';
 import { insertionIndex, resolveDropColumn } from './dropTarget';
-import type { BoardState } from './types';
 
 const board: BoardState = {
   cards: {

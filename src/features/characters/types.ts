@@ -1,4 +1,4 @@
-import type { CharactersQuery } from '../../gql/graphql';
+import type { CharactersQuery } from '../../graphql/generated/graphql';
 
 type QueryResults = NonNullable<NonNullable<CharactersQuery['characters']>['results']>;
 

@@ -277,3 +277,29 @@ test('replays the discharge when a second card is finished', async ({ page }) =>
   // One burst at a time: the previous portal has already left.
   await expect(column(page, 'done').getByTestId('portal-blast')).toHaveCount(1);
 });
+
+test('Escape restores the original order after a cross-column preview', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await addCard(page, 'Last', 'Morty Smith');
+  await addCard(page, 'Middle', 'Birdperson');
+  await addCard(page, 'First', 'Rick Sanchez');
+  await dragTo(page, column(page, 'todo').getByTestId('card').nth(1), column(page, 'doing'), {
+    hold: true,
+  });
+  await expect(cardTitles(page, 'doing')).toHaveText(['Middle']);
+  await page.keyboard.press('Escape');
+  await page.mouse.up();
+  await expect(cardTitles(page, 'todo')).toHaveText(['First', 'Middle', 'Last']);
+  await expect(cardTitles(page, 'doing')).toHaveCount(0);
+  await expect(page.getByTestId('drag-overlay')).toHaveCount(0);
+});
+
+test('does not mount the drag portal under reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await addCard(page, 'Quiet drag', 'Morty Smith');
+  await dragTo(page, column(page, 'todo').getByTestId('card'), column(page, 'doing'), {
+    hold: true,
+  });
+  await expect(page.getByTestId('done-portal')).toHaveCount(0);
+  await page.mouse.up();
+});

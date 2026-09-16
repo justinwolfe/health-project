@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 
-import { CharacterPicker } from '../characters/CharacterPicker';
+import { CharacterPicker } from '../characters/picker/CharacterPicker';
 import type { LoadedCharacter } from '../characters/types';
 import styles from './NewCardForm.module.css';
 

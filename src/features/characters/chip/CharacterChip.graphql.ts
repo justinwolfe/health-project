@@ -1,4 +1,4 @@
-import { graphql } from '../../gql';
+import { graphql } from '../../../graphql/generated';
 
 /**
  * The data requirement for <CharacterChip />, kept next to it rather than in the

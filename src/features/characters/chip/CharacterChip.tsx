@@ -1,7 +1,7 @@
-import { type FragmentType, getFragmentData } from '../../gql';
+import { type FragmentType, getFragmentData } from '../../../graphql/generated';
 import { CharacterChipFragment } from './CharacterChip.graphql';
 import styles from './CharacterChip.module.css';
-import { describeCharacter } from './describeCharacter';
+import { describeCharacter } from '../describeCharacter';
 
 type Props = {
   character: FragmentType<typeof CharacterChipFragment>;

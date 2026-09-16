@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from 'urql';
 
-import { CharactersQuery } from '../../graphql/characters';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
-import { toLoadedCharacters, type LoadedCharacter } from './types';
+import { CharactersQuery } from '../../../graphql/queries/characters';
+import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
+import { toLoadedCharacters, type LoadedCharacter } from '../types';
 
 const DEBOUNCE_MS = 250;
 

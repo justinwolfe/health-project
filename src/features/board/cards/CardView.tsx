@@ -1,7 +1,7 @@
-import { CharacterChip } from '../characters/CharacterChip';
-import type { LoadedCharacter } from '../characters/types';
+import { CharacterChip } from '../../characters/chip/CharacterChip';
+import type { LoadedCharacter } from '../../characters/types';
+import type { Card } from '../state/types';
 import styles from './CardView.module.css';
-import type { Card } from './types';
 
 type Props = {
   card: Card;
