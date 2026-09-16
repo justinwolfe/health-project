@@ -6,7 +6,7 @@ import {
   picker,
   pickerOptions,
   searchCharacter,
-} from './support/app';
+} from '../../../testing/app';
 
 test.beforeEach(async ({ page }) => {
   await openBoard(page);

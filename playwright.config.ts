@@ -4,7 +4,10 @@ const PORT = 5173;
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
-  testDir: './e2e',
+  // Browser specs sit beside the features they cover. The explicit match keeps
+  // Playwright away from Vitest's *.test.ts files, which its default would include.
+  testDir: './src',
+  testMatch: '**/*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

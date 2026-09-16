@@ -78,7 +78,7 @@ src/
     generated/     Generated documents, types, and fragment helpers (committed)
   hooks/           Shared React hooks
   styles/          Design tokens and global styles
-e2e/              Browser tests and deterministic API fixtures
+  testing/         Browser-test helpers and deterministic API fixtures
 docs/             Architecture and testing notes
 ```
 

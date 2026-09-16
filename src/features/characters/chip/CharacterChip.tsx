@@ -8,11 +8,7 @@ type Props = {
 };
 
 export function CharacterChip({ character }: Props) {
-  // Named getFragmentData rather than the codegen default `useFragment`: it is a
-  // plain unmasking function, not a React hook, and shouldn't read like one.
   const data = getFragmentData(CharacterChipFragment, character);
-  // Origin as well as species, so two cards holding different Ricks do not read
-  // identically.
   const { detail } = describeCharacter(data);
 
   return (

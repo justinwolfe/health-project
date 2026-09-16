@@ -18,6 +18,11 @@ logic tests beside the implementation. There is no jsdom dependency.
 
 ## Browser tests
 
+Browser specs sit beside the feature they cover: `features/board/Board.spec.ts`
+and `features/characters/picker/CharacterPicker.spec.ts`. The suffix decides the
+runner — `*.test.ts` is Vitest, `*.spec.ts` is Playwright — so keep it accurate
+when adding a file.
+
 Playwright runs Chromium and starts Vite on port 5173. Locally it can reuse an
 existing server; ensure that server belongs to this checkout. In CI it starts a
 fresh server and uses one worker. Install the browser with
@@ -29,8 +34,8 @@ paging, selection, character-detail integration, and ARIA behavior. Pure label
 formatting and disambiguation rules stay in fast unit tests rather than being
 repeated in the browser suite.
 
-`e2e/support/app.ts` provides locators, drag helpers, and an API interceptor.
-`e2e/support/characters.ts` supplies 25 characters and emulates name filtering
+`src/testing/app.ts` provides locators, drag helpers, and an API interceptor.
+`src/testing/characters.ts` supplies 25 characters and emulates name filtering
 and 20-result pages. The GraphQL endpoint is stubbed, so tests do not depend on
 live catalogue contents or API availability. Fixtures use local data-URL images.
 

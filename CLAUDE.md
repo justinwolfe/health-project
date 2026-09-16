@@ -32,8 +32,6 @@ in the architecture guide instead of duplicating it here.
   Illustration geometry and effect-specific timing may use local values.
 - Skip decorative effects under reduced motion. If animation durations change,
   keep their cleanup timers aligned and verify replay and removal.
-- Do not add persistence, routing, a state library, or a component library
-  without a task that calls for it. Persistence is a planned pairing exercise.
 
 ## Before finishing
 

@@ -18,7 +18,7 @@ export default defineConfig({
   },
   test: {
     // Pure logic only. Anything that needs a DOM — and all drag-and-drop —
-    // is covered by Playwright in e2e/, since jsdom has no layout engine and
+    // is covered by Playwright's *.spec.ts files, since jsdom has no layout engine and
     // cannot produce the pointer events dnd-kit's sensors rely on.
     environment: 'node',
     include: ['src/**/*.test.ts'],

@@ -35,7 +35,13 @@ export default tseslint.config(
 
   // Node-side files that run outside the browser.
   {
-    files: ['e2e/**/*.ts', 'codegen.ts', 'vite.config.ts', 'playwright.config.ts'],
+    files: [
+      'src/**/*.spec.ts',
+      'src/testing/**/*.ts',
+      'codegen.ts',
+      'vite.config.ts',
+      'playwright.config.ts',
+    ],
     languageOptions: { globals: globals.node },
   },
 

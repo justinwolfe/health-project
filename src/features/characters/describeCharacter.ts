@@ -52,11 +52,6 @@ export type IdentifiedCharacter = CharacterDescription & {
   disambiguator: string | null;
 };
 
-/**
- * Describes a list together, so the id is only shown where it earns its place.
- * Uniqueness is judged across the characters passed in — the loaded results —
- * not the whole catalogue, since that is what the reader is choosing between.
- */
 export function describeCharacters(
   characters: readonly IdentifiableCharacter[],
 ): IdentifiedCharacter[] {

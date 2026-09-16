@@ -9,7 +9,7 @@ import {
   dragWithKeyboard,
   openBoard,
   picker,
-} from './support/app';
+} from '../../testing/app';
 
 test.beforeEach(async ({ page }) => {
   await openBoard(page);
