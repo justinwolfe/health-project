@@ -7,7 +7,7 @@ dependencies, dead code, and unsafe type escapes.
 
 ## Start here
 
-- [README](README.md): setup, commands, and project map.
+- [README](README.md): setup, commands
 - [Architecture](docs/architecture.md): ownership, drag rules, search, and effects.
 - [Testing](docs/testing.md): required checks and browser-test conventions.
 
