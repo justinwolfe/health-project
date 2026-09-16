@@ -18,10 +18,10 @@ export function useCharacterSearch(rawQuery: string) {
 
   const [page, setPage] = useState(1);
 
-  // Adjusting state during render when a value changes, rather than in an
-  // effect: React discards this render and immediately re-runs it, so the query
-  // below never fires with a new search term still pointing at an old page.
-  // https://react.dev/learn/you-might-not-need-an-effect
+  // A new search term always starts from page 1. `appliedQuery` remembers which
+  // term the current page belongs to, so we can tell when the term changed and
+  // reset before the query below runs. It also stops the reset from repeating:
+  // once updated, the terms match on the re-render.
   const [appliedQuery, setAppliedQuery] = useState(query);
   if (appliedQuery !== query) {
     setAppliedQuery(query);
@@ -44,9 +44,10 @@ export function useCharacterSearch(rawQuery: string) {
   const results = data?.characters?.results;
   const info = data?.characters?.info;
 
-  // Page 1 replaces the accumulated list, later pages extend it. Storing the
-  // key alongside the items is what makes this safe to run during render: once
-  // applied, the condition is false and the render settles.
+  // The picker shows every page loaded so far, so responses are accumulated
+  // here: page 1 replaces the list, later pages extend it. `key` records which
+  // response was last applied, so each one is added exactly once even though
+  // this check runs on every render.
   const [loaded, setLoaded] = useState<{
     query: string;
     key: string;
