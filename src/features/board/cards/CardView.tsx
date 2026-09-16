@@ -21,6 +21,7 @@ export function CardView({ card, character, lifted = false }: Props) {
   return (
     <article className={className}>
       <p className={styles.title}>{card.title}</p>
+      {card.details ? <p className={styles.details}>{card.details}</p> : null}
       {character ? (
         <CharacterChip character={character} />
       ) : (

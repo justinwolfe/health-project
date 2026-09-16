@@ -34,7 +34,7 @@ short, readable flow across more files.
 
 `BoardState` separates card records from ordering:
 
-- `cards` maps ids to title and character id.
+- `cards` maps ids to title, details (empty when omitted), and character id.
 - `columnOrder` holds an ordered list of card ids for each column.
 
 `boardReducer` handles creation and movement. `moveCard` performs both sorting

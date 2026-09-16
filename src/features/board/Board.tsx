@@ -32,7 +32,15 @@ export function Board() {
 
   const drag = useBoardDrag({ board, dispatch, onCardCompleted: playCompletion });
 
-  function handleCreate({ title, character }: { title: string; character: LoadedCharacter }) {
+  function handleCreate({
+    title,
+    details,
+    character,
+  }: {
+    title: string;
+    details: string;
+    character: LoadedCharacter;
+  }) {
     setCharactersById((previous) => new Map(previous).set(character.id, character));
     const id = crypto.randomUUID();
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -40,7 +48,7 @@ export function Board() {
     }
     dispatch({
       type: 'card/added',
-      card: { id, title, characterId: character.id },
+      card: { id, title, details, characterId: character.id },
     });
   }
 

@@ -16,6 +16,8 @@ export const COLUMN_TITLES: Record<ColumnId, string> = {
 export type Card = {
   id: string;
   title: string;
+  /** Optional longer description; an empty string when the card has none. */
+  details: string;
   /** Every card must have a character assigned; enforced by the create form. */
   characterId: string;
 };

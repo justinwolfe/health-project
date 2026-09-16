@@ -39,6 +39,19 @@ test('creates a card with its assigned character and clears the form', async ({ 
   await expect(picker(page)).toHaveValue('');
 });
 
+test('shows optional details on the card and clears them from the form', async ({ page }) => {
+  await page.getByLabel('Title').fill('Fix the portal gun');
+  await page.getByLabel('Details').fill('Recalibrate the dial.\nAvoid the Cronenberg dimension.');
+  await chooseCharacter(page, 'Rick Sanchez');
+  await page.getByRole('button', { name: 'Add card' }).click();
+
+  const card = column(page, 'todo').getByTestId('card');
+  await expect(card).toContainText('Recalibrate the dial.');
+  await expect(card).toContainText('Avoid the Cronenberg dimension.');
+  await expect(cardTitles(page, 'todo')).toHaveText(['Fix the portal gun']);
+  await expect(page.getByLabel('Details')).toHaveValue('');
+});
+
 test('refuses a card with no character assigned', async ({ page }) => {
   await page.getByLabel('Title').fill('No character on this one');
   await page.getByRole('button', { name: 'Add card' }).click();

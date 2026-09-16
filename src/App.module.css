@@ -11,6 +11,8 @@
 .title {
   display: flex;
   flex-wrap: wrap;
+  /* Also centers each line when the title wraps on narrow screens. */
+  justify-content: center;
   column-gap: 0.35em;
   margin: 0;
   padding: 0.15em 0;

@@ -21,6 +21,15 @@
   overflow-wrap: anywhere;
 }
 
+.details {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  /* Keep the line breaks typed into the textarea. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .missing {
   color: var(--color-text-muted);
   font-size: 0.8125rem;

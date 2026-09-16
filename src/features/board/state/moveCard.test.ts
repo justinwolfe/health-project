@@ -5,10 +5,10 @@ import type { BoardState } from './types';
 
 const board: BoardState = {
   cards: {
-    a: { id: 'a', title: 'A', characterId: '1' },
-    b: { id: 'b', title: 'B', characterId: '2' },
-    c: { id: 'c', title: 'C', characterId: '3' },
-    d: { id: 'd', title: 'D', characterId: '4' },
+    a: { id: 'a', title: 'A', details: '', characterId: '1' },
+    b: { id: 'b', title: 'B', details: '', characterId: '2' },
+    c: { id: 'c', title: 'C', details: '', characterId: '3' },
+    d: { id: 'd', title: 'D', details: '', characterId: '4' },
   },
   columnOrder: { todo: ['a', 'b', 'c'], doing: ['d'], done: [] },
 };

@@ -5,11 +5,12 @@ import type { LoadedCharacter } from '../characters/types';
 import styles from './NewCardForm.module.css';
 
 type Props = {
-  onCreate: (input: { title: string; character: LoadedCharacter }) => void;
+  onCreate: (input: { title: string; details: string; character: LoadedCharacter }) => void;
 };
 
 export function NewCardForm({ onCreate }: Props) {
   const [title, setTitle] = useState('');
+  const [details, setDetails] = useState('');
   const [character, setCharacter] = useState<LoadedCharacter | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Bumped after a successful submit and used as the picker's key, which resets
@@ -18,6 +19,7 @@ export function NewCardForm({ onCreate }: Props) {
   const [pickerGeneration, setPickerGeneration] = useState(0);
 
   const titleId = useId();
+  const detailsId = useId();
   const characterId = useId();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -34,8 +36,9 @@ export function NewCardForm({ onCreate }: Props) {
       return;
     }
 
-    onCreate({ title: trimmed, character });
+    onCreate({ title: trimmed, details: details.trim(), character });
     setTitle('');
+    setDetails('');
     setCharacter(null);
     setError(null);
     setPickerGeneration((generation) => generation + 1);
@@ -70,6 +73,20 @@ export function NewCardForm({ onCreate }: Props) {
           inputId={characterId}
           value={character}
           onChange={setCharacter}
+        />
+      </div>
+
+      <div className={`${styles.field} ${styles.detailsField}`}>
+        <label className={styles.label} htmlFor={detailsId}>
+          Details <span className={styles.optional}>(optional)</span>
+        </label>
+        <textarea
+          className={`${styles.input} ${styles.textarea}`}
+          id={detailsId}
+          value={details}
+          onChange={(event) => setDetails(event.target.value)}
+          placeholder="Any extra context?"
+          rows={2}
         />
       </div>
 

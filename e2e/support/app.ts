@@ -81,7 +81,8 @@ export function column(page: Page, columnId: 'todo' | 'doing' | 'done'): Locator
 }
 
 export function cardTitles(page: Page, columnId: 'todo' | 'doing' | 'done') {
-  return column(page, columnId).getByTestId('card').locator('p');
+  // The title is the card's first paragraph; details, when present, follow it.
+  return column(page, columnId).getByTestId('card').locator('p:first-of-type');
 }
 
 /**

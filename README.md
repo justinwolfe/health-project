@@ -50,8 +50,8 @@ npm run test:e2e
 
 ## Using the board
 
-- Enter a title and choose a character from the search results. A typed name
-  alone does not select a character.
+- Enter a title, optional details, and choose a character from the search
+  results. A typed name alone does not select a character.
 - In the character field, use arrow keys to browse, Enter to select, and Escape
   to close. The final “Load more” option fetches another page.
 - Drag a card to move it. With a focused card, press Space or Enter to pick it

@@ -1,13 +1,26 @@
 .form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
+  display: grid;
+  /* Title and character share the first row; details and the button share the
+     second. Spanning the character field over the button's column keeps both
+     rows flush at the same left and right edges. */
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) auto;
+  grid-template-areas:
+    'title character character'
+    'details details submit';
+  gap: var(--space-3) var(--space-4);
   padding: var(--space-4);
   background: var(--color-surface);
   border: 1.5px solid var(--color-ink);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
+}
+
+/* Matches the board's single-column breakpoint. */
+@media (max-width: 720px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'title' 'character' 'details' 'submit';
+  }
 }
 
 .field {
@@ -18,11 +31,15 @@
 }
 
 .titleField {
-  flex: 2 1 16rem;
+  grid-area: title;
 }
 
 .characterField {
-  flex: 1 1 12rem;
+  grid-area: character;
+}
+
+.detailsField {
+  grid-area: details;
 }
 
 .label {
@@ -42,7 +59,19 @@
   min-width: 0;
 }
 
+.optional {
+  font-weight: 400;
+}
+
+.textarea {
+  resize: vertical;
+}
+
 .submit {
+  grid-area: submit;
+  /* Lines up with the textarea's bottom edge instead of stretching to its height. */
+  align-self: end;
+  justify-self: end;
   padding: var(--space-2) var(--space-4);
   border: 1.5px solid var(--color-ink);
   box-shadow: 2px 2px 0 var(--color-border);
@@ -67,7 +96,8 @@
 }
 
 .error {
-  flex: 1 0 100%;
+  /* Not a named area: an empty row would still add a gap below the fields. */
+  grid-column: 1 / -1;
   margin: 0;
   color: var(--color-danger);
   font-size: 0.8125rem;

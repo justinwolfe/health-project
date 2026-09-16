@@ -7,11 +7,11 @@ describe('boardReducer', () => {
   it('adds a card to the top of To Do', () => {
     const first = boardReducer(emptyBoard, {
       type: 'card/added',
-      card: { id: 'a', title: 'First', characterId: '1' },
+      card: { id: 'a', title: 'First', details: '', characterId: '1' },
     });
     const second = boardReducer(first, {
       type: 'card/added',
-      card: { id: 'b', title: 'Second', characterId: '2' },
+      card: { id: 'b', title: 'Second', details: '', characterId: '2' },
     });
 
     expect(second.columnOrder.todo).toEqual(['b', 'a']);
@@ -21,7 +21,7 @@ describe('boardReducer', () => {
   it('does not mutate the previous state when adding', () => {
     boardReducer(emptyBoard, {
       type: 'card/added',
-      card: { id: 'a', title: 'First', characterId: '1' },
+      card: { id: 'a', title: 'First', details: '', characterId: '1' },
     });
 
     expect(emptyBoard.columnOrder.todo).toEqual([]);
@@ -30,7 +30,7 @@ describe('boardReducer', () => {
 
   it('delegates moves to moveCard', () => {
     const state: BoardState = {
-      cards: { a: { id: 'a', title: 'A', characterId: '1' } },
+      cards: { a: { id: 'a', title: 'A', details: '', characterId: '1' } },
       columnOrder: { todo: ['a'], doing: [], done: [] },
     };
 
