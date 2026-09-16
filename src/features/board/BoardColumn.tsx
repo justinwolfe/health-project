@@ -91,12 +91,6 @@ export function BoardColumn({
             );
           })}
 
-          {/* Done has no placeholder: the portal is its affordance, and the
-              heading and count already say the column is empty. */}
-          {cardIds.length === 0 && columnId !== 'done' ? (
-            <li className={styles.empty}>Drop a card here</li>
-          ) : null}
-
           {insertion === cardIds.length ? portal : null}
         </ul>
       </SortableContext>

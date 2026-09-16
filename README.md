@@ -49,6 +49,7 @@ npm run test:e2e
 ```
 
 ## Design and maintenance
+
 - [Architecture](docs/architecture.md): state flow, drag behavior, search, and effects.
 - [Testing](docs/testing.md): coverage, fixtures, and checks to run for each change.
 - [Contributor guidance](CLAUDE.md): conventions for maintaining the project.
