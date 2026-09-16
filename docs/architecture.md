@@ -2,7 +2,8 @@
 
 ## Ownership and data flow
 
-`main.tsx` installs the urql provider; `App.tsx` renders the shell and `Board`.
+`main.tsx` installs the urql provider; `App.tsx` renders the shell and passes its
+title to `Board`, which groups it with the form so the form matches its width.
 `Board` owns the reducer, retained character records, card creation, and arrival
 ids. `useBoardDrag` owns drag state, sensors, event handlers, and announcements.
 `useBoardCompletion` owns completion replay keys and cleanup timers.

@@ -121,7 +121,7 @@ test('clears the selection when the text is edited afterwards', async ({ page })
 
   // Editing the text means it no longer describes the chosen character.
   await picker(page).pressSequentially('x');
-  await page.getByRole('button', { name: 'Add card' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   await expect(page.getByRole('alert')).toHaveText('Pick a character for this card.');
 });
@@ -174,7 +174,7 @@ test('carries the distinguishing detail onto the card', async ({ page }) => {
   await page.getByLabel('Title').fill('Which Rick?');
   await searchCharacter(page, 'rick sanchez');
   await pickerOptions(page).nth(1).click();
-  await page.getByRole('button', { name: 'Add card' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   const card = page.getByTestId('card').first();
   await expect(card).toContainText('Rick Sanchez');

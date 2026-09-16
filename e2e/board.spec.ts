@@ -43,7 +43,7 @@ test('shows optional details on the card and clears them from the form', async (
   await page.getByLabel('Title').fill('Fix the portal gun');
   await page.getByLabel('Details').fill('Recalibrate the dial.\nAvoid the Cronenberg dimension.');
   await chooseCharacter(page, 'Rick Sanchez');
-  await page.getByRole('button', { name: 'Add card' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   const card = column(page, 'todo').getByTestId('card');
   await expect(card).toContainText('Recalibrate the dial.');
@@ -54,7 +54,7 @@ test('shows optional details on the card and clears them from the form', async (
 
 test('refuses a card with no character assigned', async ({ page }) => {
   await page.getByLabel('Title').fill('No character on this one');
-  await page.getByRole('button', { name: 'Add card' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   await expect(page.getByRole('alert')).toHaveText('Pick a character for this card.');
   await expect(column(page, 'todo').getByTestId('card')).toHaveCount(0);
@@ -63,7 +63,7 @@ test('refuses a card with no character assigned', async ({ page }) => {
 test('refuses a card with a blank title', async ({ page }) => {
   await chooseCharacter(page, 'Morty Smith');
   await page.getByLabel('Title').fill('   ');
-  await page.getByRole('button', { name: 'Add card' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   await expect(page.getByRole('alert')).toHaveText('Give the card a title.');
   await expect(column(page, 'todo').getByTestId('card')).toHaveCount(0);

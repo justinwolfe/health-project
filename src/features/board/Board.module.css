@@ -4,6 +4,16 @@
   gap: var(--space-5);
 }
 
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  /* Centering in the column flex container shrink-wraps the group to its widest
+     child. The form opts out of that measurement, so the title sets the width. */
+  align-self: center;
+  max-width: 100%;
+}
+
 .columns {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

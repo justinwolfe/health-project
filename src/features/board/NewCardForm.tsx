@@ -90,15 +90,15 @@ export function NewCardForm({ onCreate }: Props) {
         />
       </div>
 
-      <button className={styles.submit} type="submit">
-        Add card
-      </button>
-
       {error ? (
         <p className={styles.error} role="alert">
           {error}
         </p>
       ) : null}
+
+      <button className={styles.submit} type="submit">
+        Create
+      </button>
     </form>
   );
 }

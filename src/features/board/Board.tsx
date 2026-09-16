@@ -1,5 +1,5 @@
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
-import { useCallback, useReducer, useState } from 'react';
+import { useCallback, useReducer, useState, type ReactNode } from 'react';
 
 import type { LoadedCharacter } from '../characters/types';
 import styles from './Board.module.css';
@@ -11,7 +11,12 @@ import { useBoardCompletion } from './effects/useBoardCompletion';
 import { boardReducer } from './state/boardReducer';
 import { COLUMN_IDS, emptyBoard } from './state/types';
 
-export function Board() {
+type Props = {
+  /** The page title. Grouped with the form so the form can match its width. */
+  header: ReactNode;
+};
+
+export function Board({ header }: Props) {
   const [arrivingIds, setArrivingIds] = useState<Set<string>>(new Set());
   const finishArrival = useCallback((id: string) => {
     setArrivingIds((previous) => {
@@ -54,7 +59,10 @@ export function Board() {
 
   return (
     <div className={styles.board}>
-      <NewCardForm onCreate={handleCreate} />
+      <div className={styles.intro}>
+        {header}
+        <NewCardForm onCreate={handleCreate} />
+      </div>
 
       <DndContext
         sensors={drag.sensors}

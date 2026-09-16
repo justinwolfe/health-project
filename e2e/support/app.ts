@@ -73,7 +73,7 @@ export async function chooseCharacter(page: Page, name: string) {
 export async function addCard(page: Page, title: string, character: string) {
   await page.getByLabel('Title').fill(title);
   await chooseCharacter(page, character);
-  await page.getByRole('button', { name: 'Add card' }).click();
+  await page.getByRole('button', { name: 'Create' }).click();
 }
 
 export function column(page: Page, columnId: 'todo' | 'doing' | 'done'): Locator {
