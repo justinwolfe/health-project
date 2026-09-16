@@ -13,6 +13,9 @@
   --color-accent-contrast: #ffffff;
   --color-focus: #2f6df6;
   --color-danger: #c0392b;
+  --color-title-fill: #43b4c8;
+  --color-title-ink: #263f35;
+  --color-title-outline: #c1dc46;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;

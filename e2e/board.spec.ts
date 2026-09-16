@@ -16,7 +16,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('renders the three columns and the create form', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Kanban', level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: "Rick and Morty's Stuff To Do", level: 1 }),
+  ).toBeVisible();
 
   for (const name of ['To Do', 'Doing', 'Done']) {
     await expect(page.getByRole('heading', { name, level: 2 })).toBeVisible();

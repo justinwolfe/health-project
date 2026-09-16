@@ -5,11 +5,14 @@ export function App() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Kanban</h1>
-        <p className={styles.subtitle}>
-          Every card gets a Rick and Morty character. Drag between columns, reorder within one, and
-          finishing something is worth celebrating.
-        </p>
+        <h1 className={styles.title}>
+          <span className={styles.titleLine} data-text="Rick and Morty's">
+            Rick and Morty's
+          </span>{' '}
+          <span className={styles.titleLine} data-text="Stuff To Do">
+            Stuff To Do
+          </span>
+        </h1>
       </header>
 
       <Board />
