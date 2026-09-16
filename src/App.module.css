@@ -15,7 +15,7 @@
   margin: 0;
   padding: 0.15em 0;
   color: var(--color-title-fill);
-  font-family: 'Get Schwifty', fantasy;
+  font-family: var(--font-display);
   font-size: clamp(2.1rem, 5.5vw, 3.75rem);
   font-weight: 400;
   line-height: 1.35;
@@ -36,11 +36,4 @@
   z-index: -1;
   content: attr(data-text) / '';
   -webkit-text-stroke: 6px var(--color-title-outline);
-}
-@font-face {
-  font-family: 'Get Schwifty';
-  src: url('./assets/fonts/get-schwifty.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
 }

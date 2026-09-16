@@ -47,7 +47,7 @@ export function BoardColumn({
   const headingId = `column-heading-${columnId}`;
 
   return (
-    <section className={styles.column} aria-labelledby={headingId}>
+    <section className={styles.column} data-status={columnId} aria-labelledby={headingId}>
       <h2 className={styles.heading} id={headingId}>
         {COLUMN_TITLES[columnId]}
         <span className={styles.count} aria-label={`${cardIds.length} cards`}>
