@@ -1,7 +1,8 @@
 import {
   closestCorners,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type CollisionDetection,
@@ -64,9 +65,10 @@ export function useBoardDrag({ board, dispatch, onCardCompleted }: Options) {
   }
 
   const sensors = useSensors(
-    // A small distance threshold so a click inside a card is not swallowed as
-    // the start of a drag.
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    // Mouse and touch use separate sensors so touch can retain native vertical
+    // scrolling. A deliberate hold starts a touch drag without hijacking swipes.
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 

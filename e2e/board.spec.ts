@@ -56,8 +56,19 @@ test('refuses a card with no character assigned', async ({ page }) => {
   await page.getByLabel('Title').fill('No character on this one');
   await page.getByRole('button', { name: 'Create' }).click();
 
-  await expect(page.getByRole('alert')).toHaveText('Pick a character for this card.');
+  const error = page.getByRole('alert');
+  const character = picker(page);
+  await expect(error).toHaveText('Pick a character for this card.');
+  await expect(character).toBeFocused();
+  await expect(character).toHaveAttribute('aria-invalid', 'true');
+  const errorId = await error.getAttribute('id');
+  expect(errorId).toBeTruthy();
+  await expect(character).toHaveAttribute('aria-describedby', new RegExp(errorId ?? ''));
   await expect(column(page, 'todo').getByTestId('card')).toHaveCount(0);
+
+  await chooseCharacter(page, 'Morty Smith');
+  await expect(error).toHaveCount(0);
+  await expect(character).toHaveAttribute('aria-invalid', 'false');
 });
 
 test('refuses a card with a blank title', async ({ page }) => {
@@ -65,8 +76,24 @@ test('refuses a card with a blank title', async ({ page }) => {
   await page.getByLabel('Title').fill('   ');
   await page.getByRole('button', { name: 'Create' }).click();
 
-  await expect(page.getByRole('alert')).toHaveText('Give the card a title.');
+  const error = page.getByRole('alert');
+  const title = page.getByLabel('Title');
+  await expect(error).toHaveText('Give the card a title.');
+  await expect(title).toBeFocused();
+  await expect(title).toHaveAttribute('aria-invalid', 'true');
+  const errorId = await error.getAttribute('id');
+  expect(errorId).toBeTruthy();
+  await expect(title).toHaveAttribute('aria-describedby', errorId ?? '');
   await expect(column(page, 'todo').getByTestId('card')).toHaveCount(0);
+
+  await title.fill('A valid title');
+  await expect(error).toHaveCount(0);
+  await expect(title).toHaveAttribute('aria-invalid', 'false');
+});
+
+test('keeps cards vertically scrollable on touch screens', async ({ page }) => {
+  await addCard(page, 'Scroll past me', 'Morty Smith');
+  await expect(column(page, 'todo').getByTestId('card')).toHaveCSS('touch-action', 'pan-y');
 });
 
 test('keeps the dragged card under the cursor over every column, Done included', async ({

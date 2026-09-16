@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-import { openBoard, picker, pickerOptions, searchCharacter } from './support/app';
+import {
+  failNextCharacterRequest,
+  openBoard,
+  picker,
+  pickerOptions,
+  searchCharacter,
+} from './support/app';
 
 test.beforeEach(async ({ page }) => {
   await openBoard(page);
@@ -36,6 +42,32 @@ test('filters on the server as you type', async ({ page }) => {
 
   await searchCharacter(page, 'summer');
 
+  await expect(pickerOptions(page)).toHaveCount(1);
+  await expect(pickerOptions(page).first()).toContainText('Summer Smith');
+});
+
+test('hides stale options while a new search is pending', async ({ page }) => {
+  const combobox = picker(page);
+  await combobox.click();
+  await expect(pickerOptions(page).first()).toContainText('Rick Sanchez');
+
+  await combobox.fill('summer');
+
+  // Read immediately rather than polling past the debounce window.
+  expect(await pickerOptions(page).count()).toBe(0);
+  await expect(page.getByRole('listbox')).toHaveAttribute('aria-busy', 'true');
+  await expect(pickerOptions(page)).toHaveCount(1);
+  await expect(pickerOptions(page).first()).toContainText('Summer Smith');
+});
+
+test('explains a search failure and retries it', async ({ page }) => {
+  await failNextCharacterRequest(page);
+  await picker(page).fill('summer');
+
+  await expect(page.getByRole('alert')).toContainText('Couldn’t load characters.');
+  await page.getByRole('button', { name: 'Try again' }).click();
+
+  await expect(page.getByRole('alert')).toHaveCount(0);
   await expect(pickerOptions(page)).toHaveCount(1);
   await expect(pickerOptions(page).first()).toContainText('Summer Smith');
 });

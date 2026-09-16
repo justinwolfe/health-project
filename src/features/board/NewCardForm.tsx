@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 
 import { CharacterPicker } from '../characters/picker/CharacterPicker';
 import type { LoadedCharacter } from '../characters/types';
@@ -12,7 +12,9 @@ export function NewCardForm({ onCreate }: Props) {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
   const [character, setCharacter] = useState<LoadedCharacter | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ field: 'title' | 'character'; message: string } | null>(
+    null,
+  );
   // Bumped after a successful submit and used as the picker's key, which resets
   // its search text along with the selection. Without it the field would still
   // read "Rick Sanchez" while nothing is actually selected.
@@ -21,18 +23,23 @@ export function NewCardForm({ onCreate }: Props) {
   const titleId = useId();
   const detailsId = useId();
   const characterId = useId();
+  const errorId = useId();
+  const titleRef = useRef<HTMLInputElement>(null);
+  const characterRef = useRef<HTMLInputElement>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmed = title.trim();
     if (!trimmed) {
-      setError('Give the card a title.');
+      setError({ field: 'title', message: 'Give the card a title.' });
+      titleRef.current?.focus();
       return;
     }
     // The brief requires every card to have a character.
     if (!character) {
-      setError('Pick a character for this card.');
+      setError({ field: 'character', message: 'Pick a character for this card.' });
+      characterRef.current?.focus();
       return;
     }
 
@@ -54,13 +61,20 @@ export function NewCardForm({ onCreate }: Props) {
           Title
         </label>
         <input
+          ref={titleRef}
           className={styles.input}
           id={titleId}
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => {
+            const nextTitle = event.target.value;
+            setTitle(nextTitle);
+            if (error?.field === 'title' && nextTitle.trim()) setError(null);
+          }}
           placeholder="What needs doing?"
           autoComplete="off"
           required
+          aria-invalid={error?.field === 'title'}
+          aria-describedby={error?.field === 'title' ? errorId : undefined}
         />
       </div>
 
@@ -71,8 +85,14 @@ export function NewCardForm({ onCreate }: Props) {
         <CharacterPicker
           key={pickerGeneration}
           inputId={characterId}
+          inputRef={characterRef}
           value={character}
-          onChange={setCharacter}
+          onChange={(nextCharacter) => {
+            setCharacter(nextCharacter);
+            if (error?.field === 'character' && nextCharacter) setError(null);
+          }}
+          invalid={error?.field === 'character'}
+          describedBy={error?.field === 'character' ? errorId : undefined}
         />
       </div>
 
@@ -91,8 +111,8 @@ export function NewCardForm({ onCreate }: Props) {
       </div>
 
       {error ? (
-        <p className={styles.error} role="alert">
-          {error}
+        <p className={styles.error} id={errorId} role="alert">
+          {error.message}
         </p>
       ) : null}
 

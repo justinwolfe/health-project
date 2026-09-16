@@ -28,7 +28,7 @@ export function useCharacterSearch(rawQuery: string) {
     setPage(1);
   }
 
-  const [{ data, fetching, error, operation }] = useQuery({
+  const [{ data, fetching, error, operation }, reexecuteQuery] = useQuery({
     query: CharactersQuery,
     variables: { page, filter: query ? { name: query } : undefined },
   });
@@ -47,30 +47,51 @@ export function useCharacterSearch(rawQuery: string) {
   // Page 1 replaces the accumulated list, later pages extend it. Storing the
   // key alongside the items is what makes this safe to run during render: once
   // applied, the condition is false and the render settles.
-  const [loaded, setLoaded] = useState<{ key: string; items: LoadedCharacter[] }>({
+  const [loaded, setLoaded] = useState<{
+    query: string;
+    key: string;
+    items: LoadedCharacter[];
+    total: number;
+    hasMore: boolean;
+  }>({
+    query: '',
     key: '',
     items: [],
+    total: 0,
+    hasMore: false,
   });
 
   if (results && isCurrent && loaded.key !== resultKey) {
-    setLoaded((previous) => ({
-      key: resultKey,
-      items:
-        resultPage === 1
-          ? toLoadedCharacters(results)
-          : [...previous.items, ...toLoadedCharacters(results)],
-    }));
+    setLoaded((previous) => {
+      const nextItems = toLoadedCharacters(results);
+      const replacesResults = resultPage === 1 || previous.query !== resultQuery;
+
+      return {
+        query: resultQuery,
+        key: resultKey,
+        items: replacesResults ? nextItems : [...previous.items, ...nextItems],
+        total: info?.count ?? (replacesResults ? nextItems.length : previous.total),
+        hasMore: info?.next != null,
+      };
+    });
   }
 
+  const pending = rawQuery.trim() !== query;
+  // Never show a previous query's rows beneath newly typed text. Besides being
+  // visually misleading, those rows would still be selectable during debounce.
+  const loadedQueryIsVisible = !pending && loaded.query === query;
+  const currentError = isCurrent ? error : undefined;
+
   return {
-    characters: loaded.items,
+    characters: loadedQueryIsVisible ? loaded.items : [],
     /** Total matches on the server, not the number currently loaded. */
-    total: (isCurrent ? info?.count : null) ?? 0,
-    hasMore: isCurrent && info?.next != null,
+    total: loadedQueryIsVisible ? loaded.total : 0,
+    hasMore: loadedQueryIsVisible && !currentError && loaded.hasMore,
     loadMore: () => setPage((current) => current + 1),
     fetching,
-    error,
+    error: currentError,
+    retry: () => reexecuteQuery({ requestPolicy: 'network-only' }),
     /** True while the user has typed something we have not searched for yet. */
-    pending: rawQuery.trim() !== query,
+    pending,
   };
 }

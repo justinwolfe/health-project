@@ -44,6 +44,20 @@ export async function stubCharactersApi(page: Page) {
   });
 }
 
+/** Makes the next character request fail, then falls back to the normal stub. */
+export async function failNextCharacterRequest(page: Page) {
+  let failed = false;
+  await page.route(API, async (route) => {
+    if (failed) {
+      await route.fallback();
+      return;
+    }
+
+    failed = true;
+    await route.fulfill({ status: 503, body: 'Service unavailable' });
+  });
+}
+
 export async function openBoard(page: Page) {
   await stubCharactersApi(page);
   await page.goto('/');
@@ -61,7 +75,7 @@ export function pickerOptions(page: Page): Locator {
 /** Types into the combobox and waits for the results to catch up. */
 export async function searchCharacter(page: Page, text: string) {
   await picker(page).fill(text);
-  // The search is debounced, so the first render still shows the old results.
+  // The search is debounced; aria-busy settles only after the matching response.
   await expect(page.getByRole('listbox')).toHaveAttribute('aria-busy', 'false');
 }
 
@@ -88,7 +102,7 @@ export function cardTitles(page: Page, columnId: 'todo' | 'doing' | 'done') {
 /**
  * Drags `source` onto `target` with real pointer events.
  *
- * dnd-kit's PointerSensor only starts a drag once the pointer has travelled
+ * dnd-kit's MouseSensor only starts a drag once the pointer has travelled
  * past its activation distance, and it recomputes collisions on each move — so
  * a single jump from source to target registers as neither a drag nor a drop.
  * Hence the stepped movement, and the settle move at the end before releasing.

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
 
 import { getFragmentData } from '../../../graphql/generated';
 import { CharacterPickerOptionFragment } from './CharacterPicker.graphql';
@@ -10,8 +10,11 @@ import { useCharacterSearch } from './useCharacterSearch';
 type Props = {
   /** Id for the input, so the caller's <label htmlFor> points at it. */
   inputId: string;
+  inputRef?: RefObject<HTMLInputElement | null>;
   value: LoadedCharacter | null;
   onChange: (character: LoadedCharacter | null) => void;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
 /**
@@ -26,16 +29,25 @@ type Props = {
  * arrow keys and stops screen readers switching interaction mode partway
  * through the list.
  */
-export function CharacterPicker({ inputId, value, onChange }: Props) {
+export function CharacterPicker({
+  inputId,
+  inputRef,
+  value,
+  onChange,
+  invalid = false,
+  describedBy,
+}: Props) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   // -1 means "no option highlighted"; the input's own text is the active value.
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const { characters, total, hasMore, loadMore, fetching, pending } = useCharacterSearch(query);
+  const { characters, total, hasMore, loadMore, fetching, pending, error, retry } =
+    useCharacterSearch(query);
 
   const listboxId = useId();
   const statusId = useId();
+  const errorId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
 
   const options = getFragmentData(CharacterPickerOptionFragment, characters);
@@ -187,6 +199,7 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
         ) : null}
 
         <input
+          ref={inputRef}
           className={styles.input}
           id={inputId}
           type="text"
@@ -201,10 +214,27 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
           aria-controls={listboxId}
           aria-autocomplete="list"
           aria-required="true"
-          aria-describedby={statusId}
+          aria-invalid={invalid}
+          aria-describedby={[statusId, describedBy, error ? errorId : null]
+            .filter(Boolean)
+            .join(' ')}
           {...(activeId ? { 'aria-activedescendant': activeId } : {})}
         />
       </div>
+
+      {open && error ? (
+        <div className={styles.searchError} id={errorId} role="alert">
+          <span>Couldn’t load characters.</span>
+          <button
+            className={styles.retry}
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => retry()}
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
 
       {open ? (
         <ul
@@ -272,7 +302,7 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
             </li>
           ) : null}
 
-          {options.length === 0 && !fetching && !pending ? (
+          {options.length === 0 && !fetching && !pending && !error ? (
             <li className={styles.empty}>No characters match “{query}”.</li>
           ) : null}
         </ul>
@@ -281,7 +311,12 @@ export function CharacterPicker({ inputId, value, onChange }: Props) {
       {/* Announces result counts without stealing focus or interrupting typing. */}
       <div className={styles.liveRegion} id={statusId} role="status">
         {open
-          ? describeResults({ count: options.length, total, fetching: fetching || pending })
+          ? describeResults({
+              count: options.length,
+              total,
+              fetching: fetching || pending,
+              failed: Boolean(error),
+            })
           : ''}
       </div>
     </div>
@@ -292,11 +327,14 @@ function describeResults({
   count,
   total,
   fetching,
+  failed,
 }: {
   count: number;
   total: number;
   fetching: boolean;
+  failed: boolean;
 }) {
+  if (failed) return '';
   if (fetching) return 'Searching characters.';
   if (count === 0) return 'No characters found.';
   if (total > count) return `${count} of ${total} characters shown.`;
