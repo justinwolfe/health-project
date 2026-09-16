@@ -23,7 +23,8 @@ export function MeeseeksPoof() {
     <span className={styles.layer} aria-hidden="true" data-testid="meeseeks">
       <span className={styles.bubble}>Ooh wee!</span>
 
-      <svg className={styles.meeseeks} viewBox="0 0 240 454" role="presentation">
+      {/* Crop the illustration at the waist; the layer clips its rise at the card edge. */}
+      <svg className={styles.meeseeks} viewBox="0 0 240 240" role="presentation">
         <g
           fill="#63cce7"
           stroke="#29464e"
