@@ -12,9 +12,9 @@
   left: 50%;
   /* Overlaps the card rather than clearing it, so a card at the top of the
      column does not push the Meeseeks off the board. */
-  bottom: calc(100% - 1.9rem);
-  width: 4.5rem;
-  height: 5.5rem;
+  bottom: calc(100% - 5rem);
+  width: 5.25rem;
+  height: 10rem;
   translate: -50% 0;
   pointer-events: none;
 }
@@ -31,8 +31,8 @@
    ran out of room at the top of the column. */
 .bubble {
   position: absolute;
-  bottom: 64%;
-  left: 74%;
+  bottom: 81%;
+  left: 61%;
   padding: 0.1rem 0.4rem;
   border-radius: 999px;
   background: #16232c;
