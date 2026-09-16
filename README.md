@@ -1,11 +1,11 @@
 # Rick And Morty's Kanban Board
 
-A frontend-only board with **To Do**, **Doing**, and **Done** columns. Create a
+A board with **To Do**, **Doing**, and **Done** columns. Create a
 card, assign a Rick and Morty character, then drag it between columns or reorder
 it with a mouse or keyboard.
 
 New cards arrive through an animated portal. Finishing a card triggers a portal
-burst and a brief Mr. Meeseeks celebration. Reduced-motion preferences skip
+burst and a brief additional celebration. Reduced-motion preferences skip
 these effects. Cards live in memory and reset when the page reloads.
 
 ## Get started
